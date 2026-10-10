@@ -165,6 +165,11 @@ footer{margin:40px 0;padding-top:16px;border-top:1px solid var(--rule);color:var
 font-size:.88rem}
 .weeks li{display:flex;justify-content:space-between}
 .leaflet-container{font:inherit}
+/* Dark map tiles: OpenStreetMap serves only light ones, so they are inverted
+   and turned back to their own hues. Markers sit in another pane, untouched. */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .leaflet-tile-pane{
+filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9)}}
+:root[data-theme="dark"] .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9)}
 @media (max-width:600px){h1{font-size:1.8rem}#map{height:320px}}
 """
 
