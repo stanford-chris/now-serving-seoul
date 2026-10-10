@@ -382,7 +382,7 @@ already listed at the same address.</p>
 and its café counterpart, under KOGL Type 1. Locations from Kakao’s address search. Map
 tiles © OpenStreetMap contributors. Posts from Naver blogs, linked, never copied.</p>
 </section>"""
-    return page("About · Now Serving Seoul", "How the list is made.", body, [], "/about/",
+    return page("Now Serving Seoul · About", "How the list is made.", body, [], "/about/",
                 with_map=False, with_filters=False)
 
 
@@ -405,7 +405,7 @@ def main():
 
     recent = [e for e in entries if e["date"] > newest - dt.timedelta(days=RECENT_DAYS)]
     lede = HOME_INTRO
-    write(tmp / "index.html", page("Now Serving Seoul: new restaurants, bars and cafés", lede,
+    write(tmp / "index.html", page("Now Serving Seoul", lede,
                                    list_html(recent), recent, "/"))
 
     weeks = defaultdict(list)
@@ -416,14 +416,14 @@ def main():
         es = weeks[m]
         label = f"Week of {day_text(m, weekday=False, year=True)}"
         write(tmp / "week" / m.isoformat() / "index.html",
-              page(f"{label} · Now Serving Seoul",
+              page(f"Now Serving Seoul · {label}",
                    f"{len(es)} restaurant, bar and café licenses, {day_text(m, weekday=False)} "
                    f"to {day_text(m + dt.timedelta(days=6), weekday=False)}.",
                    list_html(es), es, f"/week/{m.isoformat()}/"))
         rows.append(f'<li><a href="/week/{m.isoformat()}/">{label}</a><span>{len(es)}</span></li>')
     weeks_body = f'<section class="day weeks"><h2>Every week</h2><ul>{"".join(rows)}</ul></section>'
     write(tmp / "weeks" / "index.html",
-          page("Every week · Now Serving Seoul", "Every week on record, by license date.",
+          page("Now Serving Seoul · Every week", "Every week on record, by license date.",
                weeks_body, [], "/weeks/", with_map=False, with_filters=False))
     write(tmp / "about" / "index.html", about_page(state))
     # The site icon is the Bluesky avatar (brand/avatar.svg), so the two match.
