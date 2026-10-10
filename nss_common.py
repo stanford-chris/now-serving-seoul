@@ -143,3 +143,12 @@ def lookup_address(road):
     -> "서울특별시 마포구 성미산로 161-11"."""
     a = re.sub(r"\s*\([^)]*\)\s*$", "", road or "")
     return a.split(",")[0].strip()
+
+
+CORPORATE = re.compile(r"^\s*(주식회사|\(주\)|㈜|유한회사|농업회사법인)\s*|\s*(주식회사|\(주\)|㈜)\s*$")
+
+
+def display_name(name):
+    """The name without the company-form words a licence often carries:
+    "주식회사 안목서초" -> "안목서초", "유동부치아바타(주)" -> "유동부치아바타"."""
+    return CORPORATE.sub("", name or "").strip() or (name or "")

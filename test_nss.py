@@ -71,6 +71,13 @@ class Addresses(unittest.TestCase):
         self.assertEqual(C.type_info("새업태", "072405"), ("새업태", "cafe"))
 
 
+class DisplayName(unittest.TestCase):
+    def test_company_form_removed(self):
+        self.assertEqual(C.display_name("주식회사 안목서초"), "안목서초")
+        self.assertEqual(C.display_name("유동부치아바타(주)"), "유동부치아바타")
+        self.assertEqual(C.display_name("부빔"), "부빔")
+
+
 class CheckList(unittest.TestCase):
     def test_short_read_is_refused(self):
         self.assertIn("last good", H.check_list([row()] * 90, 100, "용산구"))
@@ -118,7 +125,7 @@ class Merge(unittest.TestCase):
 class Build(unittest.TestCase):
     def state(self):
         lic = {}
-        H.merge(lic, [row(), row(mgt="2", name="팝업(한시적)"), row(mgt="3", state="01", day="2026-10-01")],
+        H.merge(lic, [row(), row(mgt="2", name="팝업(한시적)"), row(mgt="3", name="다른집", day="2026-10-01")],
                 "YS", "072404", "2026-10-10", "2026-09-01")
         lic["1"].update(lat=37.52, lon=126.98)
         return {"licences": lic}
@@ -141,6 +148,13 @@ class Build(unittest.TestCase):
         h = B.entry_html(e)
         self.assertIn("Newly licensed", h)
         self.assertIn("&lt;b&gt;", h)
+
+    def test_same_place_twice_is_listed_once(self):
+        lic = {}
+        H.merge(lic, [row(mgt="a", name="초초맛차", road="서울특별시 중구 을지로 281 (을지로7가)", day="2026-10-08"),
+                      row(mgt="b", name="초초맛차", road="서울특별시 중구 을지로 281, DDP 팔거리 (을지로7가)", day="2026-10-08")],
+                "JG", "072405", "2026-10-10", "2026-09-01")
+        self.assertEqual([e["id"] for e in B.listed({"licences": lic})], ["a"])
 
     def test_points_only_pinned(self):
         self.assertEqual(len(B.points(B.listed(self.state()))), 1)

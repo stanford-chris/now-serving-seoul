@@ -21,7 +21,7 @@ import sys
 import urllib.parse
 from collections import defaultdict
 
-from nss_common import DISTRICTS, GROUPS, HERE, PUBLIC, STATE
+from nss_common import DISTRICTS, GROUPS, HERE, PUBLIC, STATE, display_name, lookup_address
 
 BRAND = HERE / "brand"
 
@@ -71,9 +71,19 @@ def listed(state):
             d = dt.date.fromisoformat(e["licensed"])
         except (KeyError, ValueError):
             continue
-        out.append(dict(e, id=mgt, date=d))
-    out.sort(key=lambda e: (e["date"], e["name"]), reverse=True)
-    return out
+        out.append(dict(e, id=mgt, date=d, name=display_name(e["name"])))
+    # One place, two licences: the register sometimes holds the same name at
+    # the same street address twice (초초맛차, 을지로 281, on 8 October 2026,
+    # once with "DDP 팔거리" after the comma). The earlier licence stands.
+    out.sort(key=lambda e: (e["date"], e["id"]))
+    seen, unique = set(), []
+    for e in out:
+        k = (e["name"], lookup_address(e["road"]) or e["lot"])
+        if k not in seen:
+            seen.add(k)
+            unique.append(e)
+    unique.sort(key=lambda e: (e["date"], e["name"]), reverse=True)
+    return unique
 
 
 def kakao_link(e):
@@ -90,10 +100,11 @@ def entry_html(e):
     opened = e.get("opened")
     status = (f'<a class="status opened" href="{esc(opened["url"])}">Opened</a>'
               if opened else '<span class="status">Newly licensed</span>')
-    return (f'<li data-district="{e["district"]}" data-group="{e["group"]}">'
+    return (f'<li class="{e["group"]}" data-district="{e["district"]}" data-group="{e["group"]}" '
+            f'data-date="{e["date"].isoformat()}" data-type="{esc(e["type_en"])}">'
             f'<h3><span lang="ko">{esc(e["name"])}</span>{en}</h3>'
-            f'<p class="meta"><span class="dot {e["group"]}" aria-hidden="true"></span>'
-            f'{esc(e["type_en"])} · {where} · {status}</p>'
+            f'<p class="meta"><span class="chip {e["group"]}">{esc(e["type_en"])}</span>'
+            f'<span class="chip place">{where}</span>{status}</p>'
             f'<p class="addr" lang="ko">{esc(e["road"] or e["lot"])} '
             f'<a href="{esc(kakao_link(e))}">Kakao Map</a></p></li>')
 
@@ -135,17 +146,17 @@ def points(entries):
 
 CSS = """
 :root{--bg:#fbfaf7;--fg:#1d1b18;--muted:#6a645b;--rule:#e4dfd6;--card:#fff;
---accent:#c2410c;--restaurant:#c2410c;--bar:#7c3aed;--cafe:#0f766e;color-scheme:light dark}
+--accent:#c2410c;--restaurant:#c2410c;--bar:#7c3aed;--cafe:#0f766e;--band:#f6e7dc;color-scheme:light dark}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141311;--fg:#ece8e1;
 --muted:#a39c90;--rule:#2e2b27;--card:#1c1a17;--accent:#fb923c;--restaurant:#fb923c;
---bar:#a78bfa;--cafe:#2dd4bf}}
+--bar:#a78bfa;--cafe:#2dd4bf;--band:#24190f}}
 :root[data-theme="dark"]{--bg:#141311;--fg:#ece8e1;--muted:#a39c90;--rule:#2e2b27;
---card:#1c1a17;--accent:#fb923c;--restaurant:#fb923c;--bar:#a78bfa;--cafe:#2dd4bf}
+--card:#1c1a17;--accent:#fb923c;--restaurant:#fb923c;--bar:#a78bfa;--cafe:#2dd4bf;--band:#24190f}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 -apple-system,
 BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 .wrap{max-width:860px;margin:0 auto;padding:0 16px}
-header{padding:32px 0 8px}
+
 h1{font:700 2.2rem/1.1 Georgia,"Times New Roman",serif;margin:0 0 8px;letter-spacing:-.01em}
 h1 a{color:inherit;text-decoration:none}
 .lede{color:var(--muted);margin:0 0 4px;max-width:46em}
@@ -179,6 +190,37 @@ footer{margin:40px 0;padding-top:16px;border-top:1px solid var(--rule);color:var
 font-size:.88rem}
 .weeks li{display:flex;justify-content:space-between}
 .leaflet-container{font:inherit}
+.band{background:var(--band);border-bottom:1px solid var(--rule)}
+.head{display:flex;gap:18px;align-items:center;padding:28px 16px 18px}
+.mark img{display:block;border-radius:50%;width:64px;height:64px}
+.band h1{margin:0 0 4px}
+nav.top{display:flex;gap:16px;margin:10px 0 0}
+nav.top a{font-weight:600;text-decoration:none}
+nav.top a:hover{text-decoration:underline}
+.filters{position:sticky;top:0;z-index:1000;background:var(--bg)}
+.summary{margin:16px 0}
+.tiles{display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px}
+.tile{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
+.tile .k{display:block;font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.tile .v{display:block;font:700 1.6rem/1.2 Georgia,serif}
+.tile .v.small{font:600 1rem/1.4 system-ui,sans-serif;padding-top:6px}
+.tile .v .cnt{color:var(--muted);font-weight:400}
+.tile .v .sub{display:block;font:400 .85rem system-ui,sans-serif;color:var(--muted)}
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;
+margin-top:12px;font-size:.88rem}
+.bars .bar{height:10px;border-radius:5px;background:var(--accent);min-width:2px}
+.bars .n{color:var(--muted);font-variant-numeric:tabular-nums}
+li{padding:12px 0 12px 14px;border-left:4px solid var(--rule);margin:8px 0;border-bottom:0}
+li.restaurant{border-left-color:var(--restaurant)}li.bar{border-left-color:var(--bar)}
+li.cafe{border-left-color:var(--cafe)}
+.chip{display:inline-block;font-size:.8rem;padding:1px 8px;border-radius:999px;margin:2px 6px 2px 0;
+background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.chip.restaurant{background:color-mix(in srgb,var(--restaurant) 18%,transparent)}
+.chip.bar{background:color-mix(in srgb,var(--bar) 20%,transparent)}
+.chip.cafe{background:color-mix(in srgb,var(--cafe) 20%,transparent)}
+.meta .status{font-size:.85rem}
+@media (max-width:600px){.tiles{grid-template-columns:1fr 1fr}.tile.wide{grid-column:1/-1}
+.head{align-items:flex-start}.mark img{width:48px;height:48px}}
 /* Dark map tiles: OpenStreetMap serves only light ones, so they are inverted
    and turned back to their own hues. Markers sit in another pane, untouched. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .leaflet-tile-pane{
@@ -199,6 +241,27 @@ if(window.L&&document.getElementById('map')){
   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
  layer=L.layerGroup().addTo(map);
 }
+var NAMES=JSON.parse(document.getElementById('districts').textContent);
+var GENERIC={'Restaurant':1,'Café or snack bar':1};
+function usDay(iso){return new Date(iso+'T12:00:00Z').toLocaleDateString('en-US',
+ {weekday:'long',month:'long',day:'numeric',timeZone:'UTC'})}
+function summary(){
+ var box=document.querySelector('.summary');if(!box)return;
+ var days={},types={},dist={},n=0;
+ document.querySelectorAll('li[data-date]').forEach(function(li){if(li.hidden)return;n++;
+  days[li.dataset.date]=(days[li.dataset.date]||0)+1;
+  dist[li.dataset.district]=(dist[li.dataset.district]||0)+1;
+  if(!GENERIC[li.dataset.type])types[li.dataset.type]=(types[li.dataset.type]||0)+1;});
+ box.hidden=false;
+ document.getElementById('s-n').textContent=n;
+ var best=Object.keys(days).sort(function(a,b){return days[b]-days[a]||(a<b?1:-1)})[0];
+ document.getElementById('s-day').innerHTML=best?days[best]+'<span class="sub">'+usDay(best)+'</span>':'None';
+ document.getElementById('s-types').innerHTML=Object.keys(types).sort(function(a,b){return types[b]-types[a]})
+  .slice(0,4).map(function(t){return esc(t)+' <span class="cnt">'+types[t]+'</span>'}).join(' · ')||'None';
+ var keys=Object.keys(dist).sort(function(a,b){return dist[b]-dist[a]}),max=dist[keys[0]]||1;
+ document.getElementById('s-bars').innerHTML=keys.map(function(k){return '<span>'+NAMES[k]+
+  '</span><span class="bar" style="width:'+(100*dist[k]/max)+'%"></span><span class="n">'+dist[k]+'</span>'}).join('');
+}
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function apply(){
  var d=form.district.value,g={};
@@ -211,6 +274,7 @@ function apply(){
    li.hidden=!ok;if(ok){any=true;n++}});
   s.hidden=!any;});
  shown.textContent=n+(n===1?' place':' places')+' shown';
+ summary(d,g);
  if(layer){layer.clearLayers();var b=[];
   P.forEach(function(p){if((d&&p.d!==d)||!g[p.g])return;
    var m=L.circleMarker([p.y,p.x],{radius:6,weight:1,color:'#fff',fillColor:colour(p.g),fillOpacity:.9});
@@ -226,6 +290,13 @@ form.addEventListener('change',apply);apply();
 window.addEventListener('load',apply);
 })();
 """
+
+
+SUMMARY = """<section class="summary" hidden aria-label="Summary of the places shown">
+<div class="tiles"><div class="tile"><span class="k">Places</span><span class="v" id="s-n"></span></div>
+<div class="tile"><span class="k">Busiest day</span><span class="v" id="s-day"></span></div>
+<div class="tile wide"><span class="k">Most common</span><span class="v small" id="s-types"></span></div></div>
+<div class="bars" id="s-bars"></div></section>"""
 
 
 def page(title, lede, body, entries, path, with_map=True, with_filters=True):
@@ -246,16 +317,20 @@ def page(title, lede, body, entries, path, with_map=True, with_filters=True):
 <link rel="icon" href="/favicon.ico" sizes="32x32 64x64">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-{head_map}<style>{CSS}</style></head><body><div class="wrap">
-<header><h1><a href="/">Now Serving Seoul</a></h1><p class="lede">{lede}</p>
-<nav class="top"><a href="/">Latest</a> · <a href="/weeks/">Every week</a> · <a href="/about/">About</a></nav></header>
-<main>{map_div}{filters_html(entries) if with_filters else ""}{body}</main>
+{head_map}<style>{CSS}</style></head><body>
+<header class="band"><div class="wrap head">
+<a href="/" class="mark"><img src="/favicon.svg" width="64" height="64" alt=""></a>
+<div><h1><a href="/">Now Serving Seoul</a></h1><p class="lede">{lede}</p>
+<nav class="top"><a href="/">Latest</a><a href="/weeks/">Every week</a><a href="/about/">About</a></nav></div>
+</div></header><div class="wrap">
+<main>{filters_html(entries) if with_filters else ""}{SUMMARY if with_filters else ""}{map_div}{body}</main>
 <footer><p>A license is not an opening: a place marked “newly licensed” may not be serving yet.
 License data: Seoul Metropolitan Government, <a href="https://data.seoul.go.kr/">data.seoul.go.kr</a>,
 under <a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>. Locations: Kakao.
 Map: © OpenStreetMap contributors.</p>
 <p>Made by <a href="https://chris-stanford.com/">Chris Stanford</a>.</p></footer></div>
 <script type="application/json" id="points">{pts}</script>
+<script type="application/json" id="districts">{json.dumps({k: v[0] for k, v in DISTRICTS.items()})}</script>
 {"<script>" + SCRIPT + "</script>" if with_filters else ""}</body></html>
 """
 
