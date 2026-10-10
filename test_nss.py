@@ -36,6 +36,11 @@ class Exclusion(unittest.TestCase):
     def test_temporary_name(self):
         self.assertEqual(C.exclusion(row(name="야심떡카페(한시적)")), "temporary or pop-up")
 
+    def test_food_hall_in_the_name(self):
+        self.assertIsNotNone(C.exclusion(row(name="사월에보리밥 청밀당 동대문현대아울렛점",
+                                             road="서울특별시 중구 장충단로 13 (을지로6가)")))
+        self.assertIsNotNone(C.exclusion(row(name="더정 우롱티프로젝트 AK플라자홍대점")))
+
     def test_food_hall_address(self):
         self.assertIsNotNone(C.exclusion(row(
             road="서울특별시 강남구 압구정로 343, 갤러리아백화점 지하1층 (압구정동)")))

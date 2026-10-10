@@ -107,6 +107,10 @@ SKIP_TYPES = {"편의점", "푸드트럭", "출장조리", "이동조리", "철�
 # 86 sat at a department-store or food-hall address.
 POPUP_NAME = re.compile(r"한시적|팝업|pop-?up", re.I)
 FOOD_HALL_ADDRESS = re.compile(r"백화점|식품관|면세점|아울렛")
+# The same, in a branch name: "사월에보리밥 청밀당 동대문현대아울렛점" sits in an
+# outlet's food floor although its address names only the street (seen
+# 10 October 2026, and AK플라자홍대점 in the first name sample).
+FOOD_HALL_NAME = re.compile(r"백화점|아울렛|면세점|AK플라자|식품관")
 
 
 def type_info(type_ko, register):
@@ -124,9 +128,16 @@ def exclusion(row):
     if POPUP_NAME.search(row.get("BPLCNM") or ""):
         return "temporary or pop-up"
     addr = (row.get("RDNWHLADDR") or "") + " " + (row.get("SITEWHLADDR") or "")
-    if FOOD_HALL_ADDRESS.search(addr):
+    if FOOD_HALL_ADDRESS.search(addr) or FOOD_HALL_NAME.search(row.get("BPLCNM") or ""):
         return "department store or food hall"
     return None
+
+
+def reexclude(e):
+    """exclusion() for a stored licence, so a rule added later reaches places
+    already on the list. Uses only fields the record keeps."""
+    return exclusion({"UPTAENM": e.get("type_ko"), "BPLCNM": e.get("name"),
+                      "RDNWHLADDR": e.get("road"), "SITEWHLADDR": e.get("lot")})
 
 
 LATIN = re.compile(r"[A-Za-z]")

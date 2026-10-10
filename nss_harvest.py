@@ -34,7 +34,7 @@ from zoneinfo import ZoneInfo
 
 from nss_common import (API, DATA, DISTRICTS, GEOCODE_CACHE, KAKAO_ADDRESS,
                         KAKAO_KEYCHAIN, KEYCHAIN, REGISTERS, STATE, TYPES,
-                        english_name, exclusion, lookup_address, neighborhood,
+                        english_name, exclusion, lookup_address, neighborhood, reexclude,
                         services, type_info)
 
 SEOUL = ZoneInfo("Asia/Seoul")
@@ -229,6 +229,8 @@ def main(argv):
         unknown_types |= unknown_here
         log(f"{svc} {len(rows)} rows, {new_here} new, {time.time() - t0:.0f}s")
 
+    for e in licences.values():
+        e["excluded"] = reexclude(e)
     listed = [e for e in licences.values() if not e["excluded"]]
     log(f"tracked {len(licences)}, listed {len(listed)}; "
         f"this run added {added}, closed {closed}")
