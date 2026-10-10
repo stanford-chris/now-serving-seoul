@@ -392,8 +392,12 @@ def main():
     shutil.rmtree(tmp, ignore_errors=True)
 
     recent = [e for e in entries if e["date"] > newest - dt.timedelta(days=RECENT_DAYS)]
-    lede = (f"New restaurant, bar and café licenses in {district_count()} Seoul districts, updated daily. "
-            f"{len(recent)} in the {RECENT_DAYS} days to {day_text(newest, weekday=False)}.")
+    # His wording, 10 October 2026.
+    lede = (f"This site lists, in English, the restaurants, bars and cafés that are newly "
+            f"licensed in {district_count()} districts of Seoul. Every place in the city that "
+            f"serves food needs a license from its district office, which is published as open "
+            f"data. The site reads the registers every day, so a new place usually appears here "
+            f"within a few days of its license, often before anyone has written about it.")
     write(tmp / "index.html", page("Now Serving Seoul: new restaurants, bars and cafés", lede,
                                    list_html(recent), recent, "/"))
 
