@@ -200,14 +200,6 @@ nav.top{display:flex;gap:16px;margin:10px 0 0}
 nav.top a{font-weight:600;text-decoration:none}
 nav.top a:hover{text-decoration:underline}
 .filters{position:sticky;top:0;z-index:1000;background:var(--bg)}
-.summary{margin:16px 0}
-.tiles{display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px}
-.tile{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
-.tile .k{display:block;font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-.tile .v{display:block;font:700 1.6rem/1.2 Georgia,serif}
-.tile .v.small{font:600 1rem/1.4 system-ui,sans-serif;padding-top:6px}
-.tile .v .cnt{color:var(--muted);font-weight:400}
-.tile .v .sub{display:block;font:400 .85rem system-ui,sans-serif;color:var(--muted)}
 li{padding:12px 0 12px 14px;border-left:4px solid var(--rule);margin:8px 0;border-bottom:0}
 li.restaurant{border-left-color:var(--restaurant)}li.bar{border-left-color:var(--bar)}
 li.cafe{border-left-color:var(--cafe)}
@@ -217,8 +209,7 @@ background:color-mix(in srgb,var(--fg) 8%,transparent)}
 .chip.bar{background:color-mix(in srgb,var(--bar) 20%,transparent)}
 .chip.cafe{background:color-mix(in srgb,var(--cafe) 20%,transparent)}
 .meta .status{font-size:.85rem}
-@media (max-width:600px){.tiles{grid-template-columns:1fr 1fr}.tile.wide{grid-column:1/-1}
-.head{align-items:flex-start}.mark img{width:48px;height:48px}}
+@media (max-width:600px){.head{align-items:flex-start}.mark img{width:48px;height:48px}}
 /* Dark map tiles: OpenStreetMap serves only light ones, so they are inverted
    and turned back to their own hues. Markers sit in another pane, untouched. */
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .leaflet-tile-pane{
@@ -239,22 +230,6 @@ if(window.L&&document.getElementById('map')){
   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
  layer=L.layerGroup().addTo(map);
 }
-var GENERIC={'Restaurant':1,'Café or snack bar':1};
-function usDay(iso){return new Date(iso+'T12:00:00Z').toLocaleDateString('en-US',
- {weekday:'long',month:'long',day:'numeric',timeZone:'UTC'})}
-function summary(){
- var box=document.querySelector('.summary');if(!box)return;
- var days={},types={},n=0;
- document.querySelectorAll('li[data-date]').forEach(function(li){if(li.hidden)return;n++;
-  days[li.dataset.date]=(days[li.dataset.date]||0)+1;
-  if(!GENERIC[li.dataset.type])types[li.dataset.type]=(types[li.dataset.type]||0)+1;});
- box.hidden=false;
- document.getElementById('s-n').textContent=n;
- var best=Object.keys(days).sort(function(a,b){return days[b]-days[a]||(a<b?1:-1)})[0];
- document.getElementById('s-day').innerHTML=best?days[best]+'<span class="sub">'+usDay(best)+'</span>':'None';
- document.getElementById('s-types').innerHTML=Object.keys(types).sort(function(a,b){return types[b]-types[a]})
-  .slice(0,4).map(function(t){return esc(t)+' <span class="cnt">'+types[t]+'</span>'}).join(' · ')||'None';
-}
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function apply(){
  var d=form.district.value,g={};
@@ -267,7 +242,6 @@ function apply(){
    li.hidden=!ok;if(ok){any=true;n++}});
   s.hidden=!any;});
  shown.textContent=n+(n===1?' place':' places')+' shown';
- summary(d,g);
  if(layer){layer.clearLayers();var b=[];
   P.forEach(function(p){if((d&&p.d!==d)||!g[p.g])return;
    var m=L.circleMarker([p.y,p.x],{radius:6,weight:1,color:'#fff',fillColor:colour(p.g),fillOpacity:.9});
@@ -283,12 +257,6 @@ form.addEventListener('change',apply);apply();
 window.addEventListener('load',apply);
 })();
 """
-
-
-SUMMARY = """<section class="summary" hidden aria-label="Summary of the places shown">
-<div class="tiles"><div class="tile"><span class="k">Places</span><span class="v" id="s-n"></span></div>
-<div class="tile"><span class="k">Busiest day</span><span class="v" id="s-day"></span></div>
-<div class="tile wide"><span class="k">Most common</span><span class="v small" id="s-types"></span></div></div></section>"""
 
 
 def page(title, lede, body, entries, path, with_map=True, with_filters=True):
@@ -315,7 +283,7 @@ def page(title, lede, body, entries, path, with_map=True, with_filters=True):
 <div><h1><a href="/">Now Serving Seoul</a></h1><p class="lede">{lede}</p>
 <nav class="top"><a href="/">Latest</a><a href="/weeks/">Every week</a><a href="/about/">About</a></nav></div>
 </div></header><div class="wrap">
-<main>{filters_html(entries) if with_filters else ""}{SUMMARY if with_filters else ""}{map_div}{body}</main>
+<main>{filters_html(entries) if with_filters else ""}{map_div}{body}</main>
 <footer><p>A license is not an opening: a place marked “newly licensed” may not be serving yet.
 License data: Seoul Metropolitan Government, <a href="https://data.seoul.go.kr/">data.seoul.go.kr</a>,
 under <a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>. Locations: Kakao.
