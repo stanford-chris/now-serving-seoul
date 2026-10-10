@@ -351,7 +351,6 @@ place that serves food needs a license from its district office, which is publis
 data. The site reads the registers every day, so a new place usually appears here within a
 few days of its license, often before anyone has written about it.</p>
 <h3>Where</h3>
-<p>The districts are the ones holding the neighborhoods visitors and newcomers seek out:</p>
 <ul class="plain">{districts}</ul>
 <p>In the 30 days to October 8, 2026, these districts accounted for 531 of the 1,191
 places licensed across all 25 of Seoul’s districts, after the exclusions below.</p>
