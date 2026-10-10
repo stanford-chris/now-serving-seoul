@@ -243,6 +243,7 @@ def page(title, lede, body, entries, path, with_map=True, with_filters=True):
 <link rel="canonical" href="{canonical}">
 <meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(lede)}">
 <meta property="og:url" content="{canonical}">
+<link rel="icon" href="/favicon.ico" sizes="32x32 64x64">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 {head_map}<style>{CSS}</style></head><body><div class="wrap">
@@ -322,7 +323,10 @@ def main():
     write(tmp / "about" / "index.html", about_page(state))
     # The site icon is the Bluesky avatar (brand/avatar.svg), so the two match.
     shutil.copy(BRAND / "avatar.svg", tmp / "favicon.svg")
-    shutil.copy(BRAND / "avatar.png", tmp / "apple-touch-icon.png")
+    # favicon.ico and the PNG sizes come from brand/icons.js; Safari's tab
+    # icon did not appear with the SVG alone (10 October 2026).
+    shutil.copy(BRAND / "favicon.ico", tmp / "favicon.ico")
+    shutil.copy(BRAND / "icon-180.png", tmp / "apple-touch-icon.png")
     write(tmp / "_headers", "/*\n  Cache-Control: public, max-age=300\n"
                             "  Referrer-Policy: strict-origin-when-cross-origin\n")
 
