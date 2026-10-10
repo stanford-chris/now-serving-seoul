@@ -1,0 +1,13 @@
+{
+  // Now Serving Seoul: Cloudflare Workers static assets, the same shape as
+  // seoul-transit-art/wrangler.jsonc. Deployed by deploy.sh.
+  // workers_dev and preview_urls off: the site lives at one hostname only.
+  "name": "now-serving-seoul",
+  "compatibility_date": "2026-06-01",
+  "assets": { "directory": "./public" },
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "nowservingseoul.com", "custom_domain": true }
+  ]
+}
