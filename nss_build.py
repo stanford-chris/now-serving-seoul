@@ -345,11 +345,11 @@ def about_page(state):
     newest = (day_text(dt.date.fromisoformat(state["newest_licence"]), year=True)
               if state.get("newest_licence") else "unknown")
     body = f"""<section class="day prose"><h2>About</h2>
-<p>Now Serving Seoul lists, in English, the restaurants, bars and cafés newly licensed in
-{district_count()} Seoul districts. Every place in Seoul that serves food needs a license from
-its district office, and the city publishes those licenses as open data. The site reads
-the registers every day, so a new place usually appears here within a few days of its
-license, often before anyone has written about it.</p>
+<p>Now Serving Seoul lists, in English, the newly licensed restaurants, bars and cafés in
+{district_count()} districts of the city that are popular with visitors and newcomers. Every
+place that serves food needs a license from its district office, which is published as open
+data. The site reads the registers every day, so a new place usually appears here within a
+few days of its license, often before anyone has written about it.</p>
 <h3>Where</h3>
 <p>The districts are the ones holding the neighborhoods visitors and newcomers seek out:</p>
 <ul class="plain">{districts}</ul>
