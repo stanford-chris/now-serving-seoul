@@ -134,8 +134,9 @@ def filters_html(entries):
         f'<span class="dot {k}" aria-hidden="true"></span>{v}</label>' for k, v in GROUPS.items())
     return (f'<form class="filters" aria-label="Filter the list">'
             f'<label>District <select name="district"><option value="">All seven</option>'
-            f'{districts}</select></label><fieldset><legend>Kind of place</legend>{groups}'
-            f'</fieldset><p class="shown" aria-live="polite"></p></form>')
+            f'{districts}</select></label><div class="kinds" role="group" aria-labelledby="kinds">'
+            f'<span id="kinds" class="label">Kind of place</span>{groups}'
+            f'</div><p class="shown" aria-live="polite"></p></form>')
 
 
 def points(entries):
@@ -166,8 +167,9 @@ nav.top{font-size:.95rem;margin:8px 0 16px}
 background:var(--card)}
 .filters{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;padding:12px 0;
 border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
-.filters fieldset{border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px 14px}
-.filters legend{float:left;margin-right:10px;color:var(--muted)}
+/* A div, not a fieldset: Safari puts a fieldset's legend on a line of its own. */
+.kinds{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px}
+.kinds .label{color:var(--muted)}
 .filters select{font:inherit;padding:2px 6px}
 .shown{margin:0;color:var(--muted);font-size:.9rem;flex-basis:100%}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;
