@@ -32,11 +32,11 @@ RECENT_DAYS = 14
 # The home page intro, his wording (10 October 2026); the districts themselves
 # are named on the About page.
 HOME_INTRO = [
-    f"This site lists, in English, the newly licensed restaurants, bars and cafés in "
-    f"{district_count()} districts of Seoul that are popular with visitors and newcomers.",
-    "Every place in the city that serves food needs a license from its district office, which "
-    "is published as open data. The site reads the registers every day, so a new place usually "
-    "appears here within a few days of its license.",
+    f"This site lists the newly licensed restaurants, bars and cafés in {district_count()} "
+    f"districts of Seoul that are popular with visitors and newcomers. Every place that serves "
+    f"food needs a license from its district office, which is published as open data. The site "
+    f"reads the registers every day, so a new place usually appears here within a few days of "
+    f"its license.",
 ]
 SITE = "https://nowservingseoul.com"
 LEAFLET = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4"
