@@ -397,7 +397,7 @@ def main():
             f"licensed in {district_count()} districts of Seoul. Every place in the city that "
             f"serves food needs a license from its district office, which is published as open "
             f"data. The site reads the registers every day, so a new place usually appears here "
-            f"within a few days of its license, often before anyone has written about it.")
+            f"within a few days of its license.")
     write(tmp / "index.html", page("Now Serving Seoul: new restaurants, bars and cafés", lede,
                                    list_html(recent), recent, "/"))
 
