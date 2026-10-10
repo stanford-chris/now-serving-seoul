@@ -333,11 +333,9 @@ def page(title, lede, body, entries, path, with_map=True, with_filters=True):
 <nav class="top"><a href="/">Latest</a><a href="/weeks/">Every week</a><a href="/about/">About</a></nav></div>
 </div></header><div class="wrap">
 <main>{filters_html(entries) if with_filters else ""}{map_div}{body}</main>
-<footer><p>A license is not an opening: a place marked “newly licensed” may not be serving yet.
-License data: Seoul Metropolitan Government, <a href="https://data.seoul.go.kr/">data.seoul.go.kr</a>,
-under <a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>. Locations: Kakao.
-Map: © OpenStreetMap contributors.</p>
-<p>Made by <a href="https://chris-stanford.com/">Chris Stanford</a>.</p></footer></div>
+<footer><p>Data: Seoul Metropolitan Government
+(<a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>), Kakao, OpenStreetMap.
+<a href="/about/">About</a> · Made by <a href="https://chris-stanford.com/">Chris Stanford</a></p></footer></div>
 <script type="application/json" id="points">{pts}</script>
 {"<script>" + SCRIPT + "</script>" if with_filters else ""}</body></html>
 """
