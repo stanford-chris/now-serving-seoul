@@ -160,6 +160,14 @@ class Merge(unittest.TestCase):
         self.assertEqual(unknown, {"새업태"})
 
 
+class HomeIntro(unittest.TestCase):
+    def test_every_district_is_named(self):
+        text = " ".join(B.HOME_INTRO)
+        for name, _ in C.DISTRICTS.values():
+            self.assertIn(name, text)
+        self.assertIn(C.district_count(), text)
+
+
 class Build(unittest.TestCase):
     def state(self):
         lic = {}

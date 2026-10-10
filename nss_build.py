@@ -29,6 +29,19 @@ NAMES = HERE / "data" / "names.json"
 BLOGS = HERE / "data" / "blogs.json"
 
 RECENT_DAYS = 14
+# The home page intro, his wording (10 October 2026). It names the districts
+# itself, so a district added to nss_common.DISTRICTS must be added here too;
+# a test checks every district is named.
+HOME_INTRO = [
+    "This site lists, in English, the newly licensed restaurants, bars and cafés in eight "
+    "districts of Seoul that are popular with visitors and newcomers: Gangnam, Jongno, Jung "
+    "(including Euljiro and Myeongdong), Mapo (including Hongdae), Seocho (including Banpo, "
+    "Seorae Village and the area around the Express Bus Terminal), Seongdong (including "
+    "Seongsu), Songpa (including Jamsil) and Yongsan (including Itaewon and Hannam).",
+    "Every place in the city that serves food needs a license from its district office, which "
+    "is published as open data. The site reads the registers every day, so a new place usually "
+    "appears here within a few days of its license.",
+]
 SITE = "https://nowservingseoul.com"
 LEAFLET = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4"
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -188,7 +201,7 @@ BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 
 h1{font:700 2.2rem/1.1 Georgia,"Times New Roman",serif;margin:0 0 8px;letter-spacing:-.01em}
 h1 a{color:inherit;text-decoration:none}
-.lede{color:var(--muted);margin:0 0 4px;max-width:46em}
+.lede{color:var(--muted);margin:0 0 10px;max-width:46em}
 a{color:var(--accent)}
 nav.top{font-size:.95rem;margin:8px 0 16px}
 #map{height:420px;border-radius:10px;border:1px solid var(--rule);margin:8px 0 16px;
@@ -293,6 +306,9 @@ window.addEventListener('load',apply);
 
 def page(title, lede, body, entries, path, with_map=True, with_filters=True):
     canonical = SITE + path
+    paras = lede if isinstance(lede, list) else [lede]
+    lede = " ".join(paras)
+    lede_html = "".join(f'<p class="lede">{esc(p)}</p>' for p in paras)
     pts = json.dumps(points(entries), ensure_ascii=False).replace("</", "<\\/")
     head_map = (f'<link rel="stylesheet" href="{LEAFLET}/leaflet.min.css">'
                 f'<script src="{LEAFLET}/leaflet.min.js"></script>') if with_map else ""
@@ -312,7 +328,7 @@ def page(title, lede, body, entries, path, with_map=True, with_filters=True):
 {head_map}<style>{CSS}</style></head><body>
 <header class="band"><div class="wrap head">
 <a href="/" class="mark"><img src="/favicon.svg" width="64" height="64" alt=""></a>
-<div><h1><a href="/">Now Serving Seoul</a></h1><p class="lede">{lede}</p>
+<div><h1><a href="/">Now Serving Seoul</a></h1>{lede_html}
 <nav class="top"><a href="/">Latest</a><a href="/weeks/">Every week</a><a href="/about/">About</a></nav></div>
 </div></header><div class="wrap">
 <main>{filters_html(entries) if with_filters else ""}{map_div}{body}</main>
@@ -392,12 +408,7 @@ def main():
     shutil.rmtree(tmp, ignore_errors=True)
 
     recent = [e for e in entries if e["date"] > newest - dt.timedelta(days=RECENT_DAYS)]
-    # His wording, 10 October 2026.
-    lede = (f"This site lists, in English, the restaurants, bars and cafés that are newly "
-            f"licensed in {district_count()} districts of Seoul. Every place in the city that "
-            f"serves food needs a license from its district office, which is published as open "
-            f"data. The site reads the registers every day, so a new place usually appears here "
-            f"within a few days of its license.")
+    lede = HOME_INTRO
     write(tmp / "index.html", page("Now Serving Seoul: new restaurants, bars and cafés", lede,
                                    list_html(recent), recent, "/"))
 
