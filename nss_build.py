@@ -38,10 +38,24 @@ def esc(s):
 
 
 def day_text(d, weekday=True, year=False):
-    s = f"{d.day} {MONTHS[d.month - 1]}"
+    """U.S. style, his call for this site and its account (10 October 2026):
+    "Thursday, October 8", "October 8, 2026"."""
+    s = f"{MONTHS[d.month - 1]} {d.day}"
     if year:
-        s += f" {d.year}"
-    return f"{WEEKDAYS[d.weekday()]} {s}" if weekday else s
+        s += f", {d.year}"
+    return f"{WEEKDAYS[d.weekday()]}, {s}" if weekday else s
+
+
+def stamp_text(iso):
+    """"2026-10-10T18:12" -> "October 10, 2026, 6:12 p.m.". House style
+    a.m./p.m.; the raw string if it does not parse."""
+    try:
+        t = dt.datetime.fromisoformat(iso)
+    except (TypeError, ValueError):
+        return iso or "unknown"
+    h = t.hour % 12 or 12
+    return f"{day_text(t.date(), weekday=False, year=True)}, {h}:{t.minute:02d} " \
+           f"{'a.m.' if t.hour < 12 else 'p.m.'}"
 
 
 def monday(d):
@@ -257,7 +271,7 @@ post about it says so, with a link to that post.</p>
 department stores, and licenses marked temporary, which are almost all food-hall pop-ups.</p>
 <p>The register runs a couple of days behind. The newest license on record is dated
 {day_text(dt.date.fromisoformat(state['newest_licence']), year=True) if state.get('newest_licence') else 'unknown'};
-the site was last updated {esc(state.get('updated', 'unknown'))} (Seoul time).</p>
+the site was last updated {esc(stamp_text(state.get('updated')))} (Seoul time).</p>
 <p>License data: Seoul Metropolitan Government, <a href="https://data.seoul.go.kr/dataList/OA-16094/S/1/datasetView.do">서울시 일반음식점 인허가 정보</a>
 and its café counterpart, under KOGL Type 1. Locations from Kakao’s address search; map tiles
 © OpenStreetMap contributors.</p></section>"""
