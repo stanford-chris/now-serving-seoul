@@ -206,10 +206,6 @@ nav.top a:hover{text-decoration:underline}
 .tile .v.small{font:600 1rem/1.4 system-ui,sans-serif;padding-top:6px}
 .tile .v .cnt{color:var(--muted);font-weight:400}
 .tile .v .sub{display:block;font:400 .85rem system-ui,sans-serif;color:var(--muted)}
-.bars{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;
-margin-top:12px;font-size:.88rem}
-.bars .bar{height:10px;border-radius:5px;background:var(--accent);min-width:2px}
-.bars .n{color:var(--muted);font-variant-numeric:tabular-nums}
 li{padding:12px 0 12px 14px;border-left:4px solid var(--rule);margin:8px 0;border-bottom:0}
 li.restaurant{border-left-color:var(--restaurant)}li.bar{border-left-color:var(--bar)}
 li.cafe{border-left-color:var(--cafe)}
@@ -241,16 +237,14 @@ if(window.L&&document.getElementById('map')){
   attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
  layer=L.layerGroup().addTo(map);
 }
-var NAMES=JSON.parse(document.getElementById('districts').textContent);
 var GENERIC={'Restaurant':1,'Café or snack bar':1};
 function usDay(iso){return new Date(iso+'T12:00:00Z').toLocaleDateString('en-US',
  {weekday:'long',month:'long',day:'numeric',timeZone:'UTC'})}
 function summary(){
  var box=document.querySelector('.summary');if(!box)return;
- var days={},types={},dist={},n=0;
+ var days={},types={},n=0;
  document.querySelectorAll('li[data-date]').forEach(function(li){if(li.hidden)return;n++;
   days[li.dataset.date]=(days[li.dataset.date]||0)+1;
-  dist[li.dataset.district]=(dist[li.dataset.district]||0)+1;
   if(!GENERIC[li.dataset.type])types[li.dataset.type]=(types[li.dataset.type]||0)+1;});
  box.hidden=false;
  document.getElementById('s-n').textContent=n;
@@ -258,9 +252,6 @@ function summary(){
  document.getElementById('s-day').innerHTML=best?days[best]+'<span class="sub">'+usDay(best)+'</span>':'None';
  document.getElementById('s-types').innerHTML=Object.keys(types).sort(function(a,b){return types[b]-types[a]})
   .slice(0,4).map(function(t){return esc(t)+' <span class="cnt">'+types[t]+'</span>'}).join(' · ')||'None';
- var keys=Object.keys(dist).sort(function(a,b){return dist[b]-dist[a]}),max=dist[keys[0]]||1;
- document.getElementById('s-bars').innerHTML=keys.map(function(k){return '<span>'+NAMES[k]+
-  '</span><span class="bar" style="width:'+(100*dist[k]/max)+'%"></span><span class="n">'+dist[k]+'</span>'}).join('');
 }
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function apply(){
@@ -295,8 +286,7 @@ window.addEventListener('load',apply);
 SUMMARY = """<section class="summary" hidden aria-label="Summary of the places shown">
 <div class="tiles"><div class="tile"><span class="k">Places</span><span class="v" id="s-n"></span></div>
 <div class="tile"><span class="k">Busiest day</span><span class="v" id="s-day"></span></div>
-<div class="tile wide"><span class="k">Most common</span><span class="v small" id="s-types"></span></div></div>
-<div class="bars" id="s-bars"></div></section>"""
+<div class="tile wide"><span class="k">Most common</span><span class="v small" id="s-types"></span></div></div></section>"""
 
 
 def page(title, lede, body, entries, path, with_map=True, with_filters=True):
@@ -330,7 +320,6 @@ under <a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>. Loc
 Map: © OpenStreetMap contributors.</p>
 <p>Made by <a href="https://chris-stanford.com/">Chris Stanford</a>.</p></footer></div>
 <script type="application/json" id="points">{pts}</script>
-<script type="application/json" id="districts">{json.dumps({k: v[0] for k, v in DISTRICTS.items()})}</script>
 {"<script>" + SCRIPT + "</script>" if with_filters else ""}</body></html>
 """
 
