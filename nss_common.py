@@ -31,8 +31,25 @@ DISTRICTS = {
     "MP": ("Mapo", "마포구"),
     "SC": ("Seocho", "서초구"),
     "SD": ("Seongdong", "성동구"),
+    "SP": ("Songpa", "송파구"),   # added 10 October 2026, his call, after the 25-district count
     "YS": ("Yongsan", "용산구"),
 }
+# The neighborhoods each district is on the list for, named on the About page.
+NEIGHBORHOODS = {
+    "GN": "Apgujeong, Cheongdam, Sinsa-dong and Garosu-gil",
+    "JN": "Ikseon-dong, Seochon and Samcheong-dong",
+    "JG": "Euljiro and Myeongdong",
+    "MP": "Hongdae, Yeonnam-dong and Mangwon-dong",
+    "SC": "Banpo, Seorae Village and the area around the Express Bus Terminal",
+    "SD": "Seongsu-dong",
+    "SP": "Jamsil and Songridan-gil",
+    "YS": "Itaewon and Hannam-dong",
+}
+NUMBER_WORDS = {7: "seven", 8: "eight", 9: "nine", 10: "ten"}
+
+
+def district_count():
+    return NUMBER_WORDS.get(len(DISTRICTS), str(len(DISTRICTS)))
 REGISTERS = {"072404": "restaurant", "072405": "cafe"}
 
 

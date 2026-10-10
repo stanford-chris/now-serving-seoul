@@ -203,7 +203,8 @@ def main(argv):
         state = {"licences": {}, "totals": {}}
     licences, totals = state["licences"], state["totals"]
     today = dt.datetime.now(SEOUL).date()
-    floor = (today - dt.timedelta(days=LATE_DAYS if licences else FIRST_RUN_DAYS)).isoformat()
+    late = (today - dt.timedelta(days=LATE_DAYS)).isoformat()
+    first = (today - dt.timedelta(days=FIRST_RUN_DAYS)).isoformat()
     not_checked, added, closed, unknown_types = [], 0, 0, set()
 
     for svc, district, register in services():
@@ -217,6 +218,9 @@ def main(argv):
         if bad:
             not_checked.append(f"{svc}: {bad}")
             continue
+        # A register never read before (a district just added) starts with
+        # the first-run window, so its archive reaches as far back as the others'.
+        floor = late if svc in totals else first
         totals[svc] = len(rows)
         new_here, closed_here, unknown_here = merge(licences, rows, district, register,
                                                     today.isoformat(), floor)

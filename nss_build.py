@@ -21,7 +21,8 @@ import sys
 import urllib.parse
 from collections import defaultdict
 
-from nss_common import DISTRICTS, GROUPS, HERE, PUBLIC, STATE, display_name, lookup_address
+from nss_common import (DISTRICTS, GROUPS, HERE, NEIGHBORHOODS, PUBLIC, STATE,
+                        district_count, display_name, lookup_address)
 
 BRAND = HERE / "brand"
 NAMES = HERE / "data" / "names.json"
@@ -160,7 +161,7 @@ def filters_html(entries):
         f'<label><input type="checkbox" value="{k}" checked> '
         f'<span class="dot {k}" aria-hidden="true"></span>{v}</label>' for k, v in GROUPS.items())
     return (f'<form class="filters" aria-label="Filter the list">'
-            f'<label>District <select name="district"><option value="">All seven</option>'
+            f'<label>District <select name="district"><option value="">All {district_count()}</option>'
             f'{districts}</select></label><div class="kinds" role="group" aria-labelledby="kinds">'
             f'<span id="kinds" class="label">Kind of place</span>{groups}'
             f'</div><p class="shown" aria-live="polite"></p></form>')
@@ -211,6 +212,8 @@ li{padding:10px 0;border-bottom:1px solid var(--rule)}
 li h3{font-size:1.05rem;margin:0}
 li .ko{color:var(--muted);font-weight:400;margin-left:6px}
 .about{font-style:italic;margin:2px 0 4px}
+.prose{max-width:40em}.prose h3{font:600 1.05rem Georgia,serif;margin:22px 0 4px}
+ul.plain{list-style:disc;padding-left:20px}ul.plain li{border:0;padding:2px 0;margin:0}
 .status.opened{color:var(--cafe);font-weight:700}
 li p{margin:2px 0}
 .meta{font-size:.92rem}
@@ -324,23 +327,51 @@ Map: © OpenStreetMap contributors.</p>
 
 
 def about_page(state):
-    body = f"""<section class="day"><h2>About</h2>
-<p>Now Serving Seoul lists the restaurants, bars and cafés newly licensed in seven Seoul
-districts: Gangnam, Jongno, Jung, Mapo, Seocho, Seongdong and Yongsan. It is rebuilt every
-day from the city’s food-license register.</p>
+    districts = "".join(
+        f"<li><strong>{DISTRICTS[k][0]}</strong>: {NEIGHBORHOODS[k]}</li>"
+        for k in sorted(DISTRICTS, key=lambda k: DISTRICTS[k][0]))
+    newest = (day_text(dt.date.fromisoformat(state["newest_licence"]), year=True)
+              if state.get("newest_licence") else "unknown")
+    body = f"""<section class="day prose"><h2>About</h2>
+<p>Now Serving Seoul lists, in English, the restaurants, bars and cafés newly licensed in
+{district_count()} Seoul districts. Every place in Seoul that serves food needs a license from
+its district office, and the city publishes those licenses as open data. The site reads
+the registers every day, so a new place usually appears here within a few days of its
+license, often before anyone has written about it.</p>
+<h3>Where</h3>
+<p>The districts are the ones holding the neighborhoods visitors and newcomers seek out:</p>
+<ul class="plain">{districts}</ul>
+<p>In the 30 days to October 8, 2026, these districts accounted for 531 of the 1,191
+places licensed across all 25 of Seoul’s districts, after the exclusions below.</p>
+<h3>Newly licensed, or opened?</h3>
 <p>Every place starts as <strong>newly licensed</strong>. A license is permission to serve,
-not proof that a place has opened, so a place is marked <strong>opened</strong> only when a
-post about it says so, with a link to that post.</p>
-<p>Left out: convenience stores, food trucks, caterers, counters in stations, cinemas and
-department stores, and licenses marked temporary, which are almost all food-hall pop-ups.</p>
+not proof that a place is serving: some open weeks later, and a few never do. Once a week,
+each place licensed in the last six weeks is looked up on Naver’s blogs. When a post shows
+the place open, at the same address, it is marked <strong>opened</strong> with a link to
+that post and a one-line description. The post itself is never copied.</p>
+<h3>Names</h3>
+<p>Where the license gives a name in English, the site uses it. Otherwise the English name
+is written by an A.I. model (Anthropic’s Claude): a Korean spelling of an English word
+becomes that word, and anything else is romanized, with a short meaning when the name is
+ordinary Korean words. When a blog post shows the place’s own English name, from its sign
+or menu, that is used instead. The one-line descriptions of opened places are A.I.-written
+too, from the posts. The Korean name from the license is always shown beside the English.</p>
+<h3>Left out</h3>
+<p>Convenience stores, food trucks, caterers, counters in stations, cinemas, motorway stops
+and department stores; licenses marked temporary, which are almost all food-hall pop-ups;
+anything at a department-store or food-hall address; and a second license for a place
+already listed at the same address.</p>
+<h3>How current</h3>
 <p>The register runs a couple of days behind. The newest license on record is dated
-{day_text(dt.date.fromisoformat(state['newest_licence']), year=True) if state.get('newest_licence') else 'unknown'};
-the site was last updated {esc(stamp_text(state.get('updated')))} (Seoul time).</p>
-<p>License data: Seoul Metropolitan Government, <a href="https://data.seoul.go.kr/dataList/OA-16094/S/1/datasetView.do">서울시 일반음식점 인허가 정보</a>
-and its café counterpart, under KOGL Type 1. Locations from Kakao’s address search; map tiles
-© OpenStreetMap contributors.</p></section>"""
-    return (page("About · Now Serving Seoul", "How the list is made.", body, [], "/about/",
-                 with_map=False, with_filters=False))
+{newest}; the site was last updated {esc(stamp_text(state.get("updated")))} (Seoul time).</p>
+<h3>Sources</h3>
+<p>License data: Seoul Metropolitan Government,
+<a href="https://data.seoul.go.kr/dataList/OA-16094/S/1/datasetView.do">서울시 일반음식점 인허가 정보</a>
+and its café counterpart, under KOGL Type 1. Locations from Kakao’s address search. Map
+tiles © OpenStreetMap contributors. Posts from Naver blogs, linked, never copied.</p>
+</section>"""
+    return page("About · Now Serving Seoul", "How the list is made.", body, [], "/about/",
+                with_map=False, with_filters=False)
 
 
 def write(path, text):
@@ -361,7 +392,7 @@ def main():
     shutil.rmtree(tmp, ignore_errors=True)
 
     recent = [e for e in entries if e["date"] > newest - dt.timedelta(days=RECENT_DAYS)]
-    lede = (f"New restaurant, bar and café licenses in seven Seoul districts, updated daily. "
+    lede = (f"New restaurant, bar and café licenses in {district_count()} Seoul districts, updated daily. "
             f"{len(recent)} in the {RECENT_DAYS} days to {day_text(newest, weekday=False)}.")
     write(tmp / "index.html", page("Now Serving Seoul: new restaurants, bars and cafés", lede,
                                    list_html(recent), recent, "/"))

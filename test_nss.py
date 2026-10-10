@@ -21,8 +21,8 @@ class Services(unittest.TestCase):
         self.assertEqual(C.DISTRICTS["JN"][1], "종로구")
         self.assertNotIn("JR", C.DISTRICTS)
 
-    def test_fourteen_registers(self):
-        self.assertEqual(len(C.services()), 14)
+    def test_sixteen_registers(self):
+        self.assertEqual(len(C.services()), 16)
 
 
 class Exclusion(unittest.TestCase):

@@ -1,16 +1,16 @@
 # Now Serving Seoul
 
-New restaurant, bar and café licenses in seven Seoul districts, in English, at
+New restaurant, bar and café licenses in eight Seoul districts, in English, at
 [nowservingseoul.com](https://nowservingseoul.com).
 
-Gangnam, Jongno, Jung, Mapo, Seocho, Seongdong and Yongsan. Rebuilt daily from
+Gangnam, Jongno, Jung, Mapo, Seocho, Seongdong, Songpa and Yongsan. Rebuilt daily from
 Seoul’s food-license register.
 
 ## How it works
 
 | Step | Script | What it does |
 | --- | --- | --- |
-| Harvest | `nss_harvest.py` | Reads 14 registers (two per district), keeps every new operating license by its management number, marks closures, pins each place with Kakao’s address search |
+| Harvest | `nss_harvest.py` | Reads 16 registers (two per district), keeps every new operating license by its management number, marks closures, pins each place with Kakao’s address search |
 | Build | `nss_build.py` | Writes `public/`: the last 14 days with a map and filters, one page per week, an index of weeks, an about page |
 | Deploy | `deploy.sh` | Harvest, build, `wrangler deploy` to the Worker `now-serving-seoul` |
 
