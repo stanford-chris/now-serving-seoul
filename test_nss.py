@@ -71,6 +71,44 @@ class Addresses(unittest.TestCase):
         self.assertEqual(C.type_info("새업태", "072405"), ("새업태", "cafe"))
 
 
+class Blogs(unittest.TestCase):
+    E = {"licensed": "2026-09-01", "road": "서울특별시 마포구 토정로 128, 4층 (상수동)", "dong": "상수동"}
+    POST = {"url": "https://blog.naver.com/a/1", "posted": "2026-09-20", "title": "한강 토오베 (TOVE)",
+            "snippet": "", "text": "서울 마포구 토정로 128 신상 찻집"}
+
+    def test_good_verdict(self):
+        import nss_blogs as N
+        r = N.accept("x", self.E, [self.POST], {"post": self.POST["url"], "english": "TOVE",
+                                               "about": "A tea house overlooking the Han"})
+        self.assertEqual(r["opened"]["url"], self.POST["url"])
+        self.assertEqual(r["english"], "TOVE")
+
+    def test_post_before_licence_is_not_an_opening(self):
+        import nss_blogs as N
+        p = dict(self.POST, posted="2026-08-01")
+        self.assertIsNone(N.accept("x", self.E, [p], {"post": p["url"]})["opened"])
+
+    def test_post_not_naming_the_street_is_not_an_opening(self):
+        import nss_blogs as N
+        p = dict(self.POST, text="부산 해운대 신상 찻집")
+        self.assertIsNone(N.accept("x", self.E, [p], {"post": p["url"]})["opened"])
+
+    def test_url_not_returned_by_search_is_refused(self):
+        import nss_blogs as N
+        self.assertIsNone(N.accept("x", self.E, [self.POST], {"post": "https://evil.example/"})["opened"])
+
+    def test_english_must_appear_in_a_post(self):
+        import nss_blogs as N
+        self.assertIsNone(N.accept("x", self.E, [self.POST], {"english": "Han River Tove Cafe"})["english"])
+
+
+class ModelNames(unittest.TestCase):
+    def test_only_asked_names_without_hangul(self):
+        import nss_names as N
+        got = N.accept(["벨리풀", "뎅뎅"], {"벨리풀": "Belly Full", "뎅뎅": "뎅뎅", "기타": "Other"})
+        self.assertEqual(got, {"벨리풀": "Belly Full"})
+
+
 class DisplayName(unittest.TestCase):
     def test_company_form_removed(self):
         self.assertEqual(C.display_name("주식회사 안목서초"), "안목서초")
@@ -131,7 +169,7 @@ class Build(unittest.TestCase):
         return {"licences": lic}
 
     def test_excluded_are_not_listed(self):
-        ids = {e["id"] for e in B.listed(self.state())}
+        ids = {e["id"] for e in B.listed(self.state(), {}, {})}
         self.assertEqual(ids, {"1", "3"})
 
     def test_us_style_dates(self):
@@ -143,7 +181,7 @@ class Build(unittest.TestCase):
         self.assertEqual(B.stamp_text("2026-10-10T00:15"), "October 10, 2026, 12:15 a.m.")
 
     def test_entry_says_newly_licensed_and_escapes(self):
-        e = B.listed(self.state())[0]
+        e = B.listed(self.state(), {}, {})[0]
         e["name"] = "<b>"
         h = B.entry_html(e)
         self.assertIn("Newly licensed", h)
@@ -154,19 +192,27 @@ class Build(unittest.TestCase):
         H.merge(lic, [row(mgt="a", name="초초맛차", road="서울특별시 중구 을지로 281 (을지로7가)", day="2026-10-08"),
                       row(mgt="b", name="초초맛차", road="서울특별시 중구 을지로 281, DDP 팔거리 (을지로7가)", day="2026-10-08")],
                 "JG", "072405", "2026-10-10", "2026-09-01")
-        self.assertEqual([e["id"] for e in B.listed({"licences": lic})], ["a"])
+        self.assertEqual([e["id"] for e in B.listed({"licences": lic}, {}, {})], ["a"])
+
+    def test_english_preference_blog_then_licence_then_model(self):
+        st = self.state()
+        st["licences"]["1"]["name_en"] = "LICENCE"
+        e = [x for x in B.listed(st, {"부빔": "MODEL"}, {"1": {"english": "BLOG"}}) if x["id"] == "1"][0]
+        self.assertEqual(e["name_en"], "BLOG")
+        e = [x for x in B.listed(st, {"부빔": "MODEL"}, {}) if x["id"] == "1"][0]
+        self.assertEqual(e["name_en"], "LICENCE")
 
     def test_points_only_pinned(self):
-        self.assertEqual(len(B.points(B.listed(self.state()))), 1)
+        self.assertEqual(len(B.points(B.listed(self.state(), {}, {}))), 1)
 
     def test_kakao_link_uses_coordinates(self):
-        e = [x for x in B.listed(self.state()) if x["id"] == "1"][0]
+        e = [x for x in B.listed(self.state(), {}, {}) if x["id"] == "1"][0]
         self.assertTrue(B.kakao_link(e).startswith("https://map.kakao.com/link/map/"))
 
     def test_points_json_cannot_close_the_script(self):
         st = self.state()
         st["licences"]["1"]["name"] = "</script><b>"
-        html = B.page("t", "l", "", B.listed(st), "/")
+        html = B.page("t", "l", "", B.listed(st, {}, {}), "/")
         self.assertNotIn("</script><b>", html)
 
 

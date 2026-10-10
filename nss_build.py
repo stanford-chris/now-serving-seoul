@@ -24,6 +24,8 @@ from collections import defaultdict
 from nss_common import DISTRICTS, GROUPS, HERE, PUBLIC, STATE, display_name, lookup_address
 
 BRAND = HERE / "brand"
+NAMES = HERE / "data" / "names.json"
+BLOGS = HERE / "data" / "blogs.json"
 
 RECENT_DAYS = 14
 SITE = "https://nowservingseoul.com"
@@ -62,7 +64,19 @@ def monday(d):
     return d - dt.timedelta(days=d.weekday())
 
 
-def listed(state):
+def load(path):
+    try:
+        return json.loads(path.read_text())
+    except FileNotFoundError:
+        return {}
+
+
+def listed(state, names=None, blogs=None):
+    """Every place shown, newest first. English name, in order of preference:
+    a blog post's (nss_blogs.py), the licence's own bracketed English, the
+    model's (nss_names.py)."""
+    names = load(NAMES) if names is None else names
+    blogs = load(BLOGS) if blogs is None else blogs
     out = []
     for mgt, e in state["licences"].items():
         if e.get("excluded") or e.get("status") == "closed":
@@ -71,7 +85,11 @@ def listed(state):
             d = dt.date.fromisoformat(e["licensed"])
         except (KeyError, ValueError):
             continue
-        out.append(dict(e, id=mgt, date=d, name=display_name(e["name"])))
+        name = display_name(e["name"])
+        b = blogs.get(mgt) or {}
+        out.append(dict(e, id=mgt, date=d, name=name,
+                        name_en=b.get("english") or e.get("name_en") or names.get(name),
+                        opened=b.get("opened"), about=b.get("about")))
     # One place, two licences: the register sometimes holds the same name at
     # the same street address twice (초초맛차, 을지로 281, on 8 October 2026,
     # once with "DDP 팔거리" after the comma). The earlier licence stands.
@@ -96,13 +114,22 @@ def kakao_link(e):
 def entry_html(e):
     district = DISTRICTS[e["district"]][0]
     where = f"{district}, {esc(e['dong'])}" if e.get("dong") else district
-    en = f' <span class="en">{esc(e["name_en"])}</span>' if e.get("name_en") and e["name_en"] != e["name"] else ""
+    if e.get("name_en") and e["name_en"] != e["name"]:
+        title = f'{esc(e["name_en"])} <span class="ko" lang="ko">{esc(e["name"])}</span>'
+    else:
+        title = f'<span lang="ko">{esc(e["name"])}</span>'
     opened = e.get("opened")
-    status = (f'<a class="status opened" href="{esc(opened["url"])}">Opened</a>'
-              if opened else '<span class="status">Newly licensed</span>')
+    if opened:
+        posted = dt.date.fromisoformat(opened["posted"])
+        status = (f'<span class="status opened">Opened</span> '
+                  f'<a class="status" href="{esc(opened["url"])}">blog post, '
+                  f'{day_text(posted, weekday=False)}</a>')
+    else:
+        status = '<span class="status">Newly licensed</span>'
+    about = f'<p class="about">{esc(e["about"])}</p>' if e.get("about") else ""
     return (f'<li class="{e["group"]}" data-district="{e["district"]}" data-group="{e["group"]}" '
             f'data-date="{e["date"].isoformat()}" data-type="{esc(e["type_en"])}">'
-            f'<h3><span lang="ko">{esc(e["name"])}</span>{en}</h3>'
+            f'<h3>{title}</h3>{about}'
             f'<p class="meta"><span class="chip {e["group"]}">{esc(e["type_en"])}</span>'
             f'<span class="chip place">{where}</span>{status}</p>'
             f'<p class="addr" lang="ko">{esc(e["road"] or e["lot"])} '
@@ -182,11 +209,13 @@ border-bottom:1px solid var(--rule)}
 ul{list-style:none;margin:0;padding:0}
 li{padding:10px 0;border-bottom:1px solid var(--rule)}
 li h3{font-size:1.05rem;margin:0}
-li .en{color:var(--muted);font-weight:400;margin-left:6px}
+li .ko{color:var(--muted);font-weight:400;margin-left:6px}
+.about{font-style:italic;margin:2px 0 4px}
+.status.opened{color:var(--cafe);font-weight:700}
 li p{margin:2px 0}
 .meta{font-size:.92rem}
 .addr{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}
-.status{color:var(--muted)}.status.opened{font-weight:600}
+.status{color:var(--muted)}
 li[hidden],.day[hidden]{display:none}
 footer{margin:40px 0;padding-top:16px;border-top:1px solid var(--rule);color:var(--muted);
 font-size:.88rem}
@@ -245,7 +274,7 @@ function apply(){
  if(layer){layer.clearLayers();var b=[];
   P.forEach(function(p){if((d&&p.d!==d)||!g[p.g])return;
    var m=L.circleMarker([p.y,p.x],{radius:6,weight:1,color:'#fff',fillColor:colour(p.g),fillOpacity:.9});
-   m.bindPopup('<strong lang="ko">'+esc(p.n)+'</strong>'+(p.e?'<br>'+esc(p.e):'')+'<br>'+esc(p.t)+
+   m.bindPopup((p.e?'<strong>'+esc(p.e)+'</strong><br><span lang="ko">'+esc(p.n)+'</span>':'<strong lang="ko">'+esc(p.n)+'</strong>')+'<br>'+esc(p.t)+
     '<br><a href="'+p.k+'">Kakao Map</a>');
    m.addTo(layer);b.push([p.y,p.x]);});
   map.invalidateSize();
