@@ -29,18 +29,11 @@ NAMES = HERE / "data" / "names.json"
 BLOGS = HERE / "data" / "blogs.json"
 
 RECENT_DAYS = 14
-# The home page intro, his wording (10 October 2026). It names the districts
-# itself, so a district added to nss_common.DISTRICTS must be added here too;
-# a test checks every district is named.
+# The home page intro, his wording (10 October 2026); the districts themselves
+# are named on the About page.
 HOME_INTRO = [
-    "This site lists, in English, the newly licensed restaurants, bars and cafés in eight "
-    "districts of Seoul that are popular with visitors and newcomers: Gangnam, Jongno, Jung "
-    "(including Euljiro and Myeongdong), Mapo (including Hongdae), Seocho (including Banpo, "
-    "Seorae Village and the area around the Express Bus Terminal), Seongdong (including "
-    "Seongsu), Songpa (including Jamsil) and Yongsan (including Itaewon and Hannam).",
-    "Every place in the city that serves food needs a license from its district office, which "
-    "is published as open data. The site reads the registers every day, so a new place usually "
-    "appears here within a few days of its license.",
+    f"This site lists, in English, the newly licensed restaurants, bars and cafés in "
+    f"{district_count()} districts of Seoul that are popular with visitors and newcomers.",
 ]
 SITE = "https://nowservingseoul.com"
 LEAFLET = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4"

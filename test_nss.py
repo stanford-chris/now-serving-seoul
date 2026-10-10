@@ -161,11 +161,8 @@ class Merge(unittest.TestCase):
 
 
 class HomeIntro(unittest.TestCase):
-    def test_every_district_is_named(self):
-        text = " ".join(B.HOME_INTRO)
-        for name, _ in C.DISTRICTS.values():
-            self.assertIn(name, text)
-        self.assertIn(C.district_count(), text)
+    def test_count_matches_the_districts(self):
+        self.assertIn(f" {C.district_count()} districts", " ".join(B.HOME_INTRO))
 
 
 class Build(unittest.TestCase):
