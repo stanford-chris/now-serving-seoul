@@ -116,7 +116,7 @@ def filters_html(entries):
     for e in entries:
         counts[e["district"]] += 1
     districts = "".join(
-        f'<option value="{k}">{v[0]} ({counts[k]})</option>'
+        f'<option value="{k}">{v[0]}</option>'
         for k, v in sorted(DISTRICTS.items(), key=lambda kv: kv[1][0]) if counts[k])
     groups = "".join(
         f'<label><input type="checkbox" value="{k}" checked> '
