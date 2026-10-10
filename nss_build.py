@@ -49,17 +49,22 @@ def esc(s):
     return html.escape(s or "", quote=True)
 
 
+# AP style, his call (10 October 2026): a month with a date is abbreviated
+# except March to July, which are never abbreviated; a weekday never is.
+AP_MONTHS = ["Jan.", "Feb.", "March", "April", "May", "June", "July", "Aug.", "Sept.",
+             "Oct.", "Nov.", "Dec."]
+
+
 def day_text(d, weekday=True, year=False):
-    """U.S. style, his call for this site and its account (10 October 2026):
-    "Thursday, October 8", "October 8, 2026"."""
-    s = f"{MONTHS[d.month - 1]} {d.day}"
+    """AP style: "Thursday, Oct. 8", "Oct. 8, 2026", "June 3"."""
+    s = f"{AP_MONTHS[d.month - 1]} {d.day}"
     if year:
         s += f", {d.year}"
     return f"{WEEKDAYS[d.weekday()]}, {s}" if weekday else s
 
 
 def stamp_text(iso):
-    """"2026-10-10T18:12" -> "October 10, 2026, 6:12 p.m.". House style
+    """"2026-10-10T18:12" -> "Oct. 10, 2026, 6:12 p.m.". House style
     a.m./p.m.; the raw string if it does not parse."""
     try:
         t = dt.datetime.fromisoformat(iso)

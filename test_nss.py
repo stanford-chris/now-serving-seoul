@@ -178,12 +178,14 @@ class Build(unittest.TestCase):
         self.assertEqual(ids, {"1", "3"})
 
     def test_us_style_dates(self):
-        self.assertEqual(B.day_text(dt.date(2026, 10, 8)), "Thursday, October 8")
-        self.assertEqual(B.day_text(dt.date(2026, 10, 5), weekday=False, year=True), "October 5, 2026")
+        self.assertEqual(B.day_text(dt.date(2026, 10, 8)), "Thursday, Oct. 8")
+        self.assertEqual(B.day_text(dt.date(2026, 10, 5), weekday=False, year=True), "Oct. 5, 2026")
+        self.assertEqual(B.day_text(dt.date(2026, 9, 28), weekday=False), "Sept. 28")
+        self.assertEqual(B.day_text(dt.date(2026, 6, 3), weekday=False), "June 3")
 
     def test_stamp(self):
-        self.assertEqual(B.stamp_text("2026-10-10T18:02"), "October 10, 2026, 6:02 p.m.")
-        self.assertEqual(B.stamp_text("2026-10-10T00:15"), "October 10, 2026, 12:15 a.m.")
+        self.assertEqual(B.stamp_text("2026-10-10T18:02"), "Oct. 10, 2026, 6:02 p.m.")
+        self.assertEqual(B.stamp_text("2026-10-10T00:15"), "Oct. 10, 2026, 12:15 a.m.")
 
     def test_entry_says_newly_licensed_and_escapes(self):
         e = B.listed(self.state(), {}, {})[0]
