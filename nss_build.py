@@ -34,6 +34,9 @@ RECENT_DAYS = 14
 HOME_INTRO = [
     f"This site lists, in English, the newly licensed restaurants, bars and cafés in "
     f"{district_count()} districts of Seoul that are popular with visitors and newcomers.",
+    "Every place in the city that serves food needs a license from its district office, which "
+    "is published as open data. The site reads the registers every day, so a new place usually "
+    "appears here within a few days of its license.",
 ]
 SITE = "https://nowservingseoul.com"
 LEAFLET = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4"
