@@ -110,6 +110,8 @@ FOOD_HALL_ADDRESS = re.compile(r"백화점|식품관|면세점|아울렛")
 # The same, in a branch name: "사월에보리밥 청밀당 동대문현대아울렛점" sits in an
 # outlet's food floor although its address names only the street (seen
 # 10 October 2026, and AK플라자홍대점 in the first name sample).
+SHARED_KITCHEN = re.compile(r"주방\s*\d+\s*호|공유주방")
+DELIVERY_NAME = re.compile(r"배달전문|배달 전문|딜리버리|공유주방")
 FOOD_HALL_NAME = re.compile(r"백화점|아울렛|면세점|AK플라자|식품관")
 
 
@@ -130,6 +132,10 @@ def exclusion(row):
     addr = (row.get("RDNWHLADDR") or "") + " " + (row.get("SITEWHLADDR") or "")
     if FOOD_HALL_ADDRESS.search(addr) or FOOD_HALL_NAME.search(row.get("BPLCNM") or ""):
         return "department store or food hall"
+    # A numbered kitchen in a shared building ("지하2층 주방 24호") is a
+    # delivery kitchen with no seats: left out, his call of 11 October 2026.
+    if SHARED_KITCHEN.search(addr) or DELIVERY_NAME.search(row.get("BPLCNM") or ""):
+        return "delivery only"
     return None
 
 

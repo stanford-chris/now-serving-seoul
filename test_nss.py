@@ -41,6 +41,10 @@ class Exclusion(unittest.TestCase):
                                              road="서울특별시 중구 장충단로 13 (을지로6가)")))
         self.assertIsNotNone(C.exclusion(row(name="더정 우롱티프로젝트 AK플라자홍대점")))
 
+    def test_shared_kitchen_is_delivery_only(self):
+        self.assertEqual(C.exclusion(row(road="서울특별시 강남구 봉은사로29길 35, 지하2층 주방 24호 (논현동)")),
+                         "delivery only")
+
     def test_food_hall_address(self):
         self.assertIsNotNone(C.exclusion(row(
             road="서울특별시 강남구 압구정로 343, 갤러리아백화점 지하1층 (압구정동)")))
@@ -101,6 +105,11 @@ class Blogs(unittest.TestCase):
     def test_url_not_returned_by_search_is_refused(self):
         import nss_blogs as N
         self.assertIsNone(N.accept("x", self.E, [self.POST], {"post": "https://evil.example/"})["opened"])
+
+    def test_delivery_only_flag(self):
+        import nss_blogs as N
+        self.assertTrue(N.accept("x", self.E, [self.POST], {"post": self.POST["url"], "delivery_only": True})["delivery_only"])
+        self.assertFalse(N.accept("x", self.E, [self.POST], {"post": self.POST["url"], "delivery_only": "yes"})["delivery_only"])
 
     def test_english_must_appear_in_a_post(self):
         import nss_blogs as N
@@ -213,6 +222,10 @@ class Build(unittest.TestCase):
         self.assertEqual(e["name_en"], "BLOG")
         e = [x for x in B.listed(st, {"부빔": "MODEL"}, {}) if x["id"] == "1"][0]
         self.assertEqual(e["name_en"], "LICENCE")
+
+    def test_delivery_only_is_not_listed(self):
+        ids = {e["id"] for e in B.listed(self.state(), {}, {"1": {"delivery_only": True}})}
+        self.assertNotIn("1", ids)
 
     def test_points_only_pinned(self):
         self.assertEqual(len(B.points(B.listed(self.state(), {}, {}))), 1)

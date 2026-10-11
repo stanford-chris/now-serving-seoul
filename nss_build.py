@@ -102,6 +102,8 @@ def listed(state, names=None, blogs=None):
             continue
         name = display_name(e["name"])
         b = blogs.get(mgt) or {}
+        if b.get("delivery_only"):
+            continue
         out.append(dict(e, id=mgt, date=d, name=name,
                         name_en=b.get("english") or e.get("name_en") or names.get(name),
                         opened=b.get("opened"), about=b.get("about")))

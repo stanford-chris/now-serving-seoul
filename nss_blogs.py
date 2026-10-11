@@ -16,6 +16,10 @@ number:
     {"checked": "2026-10-10", "opened": {"url", "posted", "title"} | null,
      "english": "Belly Full" | null, "about": "one line in our words" | null}
 
+A place a post shows is delivery-only (a delivery kitchen, a shop-in-shop
+kitchen) is dropped from the site, his call of 11 October 2026. A post by the
+business itself counts as evidence of an opening, his call the same day.
+
 Rules that stop a wrong "opened":
 - the post must be one the search returned, dated on or after the licence
   (a post from before it is about an earlier place), and must itself name the
@@ -144,6 +148,7 @@ JUDGE_PROMPT = """You are checking whether new restaurants, bars and cafés in S
 For each place, decide:
 - "post": the URL of a post that is clearly about THIS place (same name AND the same street or neighborhood) and shows it is open (the writer visited, or it announces the opening), else null. If posts disagree or the location is unclear, use null.
 - "english": the place's English name ONLY if a post writes it in Latin letters as the place's own name (signage, menu, logo, Instagram handle), else null. Do not translate or romanize yourself.
+- "delivery_only": true if a post shows the place is delivery or takeout-only with nowhere to eat or drink in (a delivery kitchen, a shared "shop-in-shop" kitchen), else false.
 - "about": if "post" is not null, one short sentence in plain English, your own words, saying what the place serves (for example "A bakery known for salt bread"), at most 15 words, no quotation from the post; else null.
 
 Reply with JSON only: {"<place id>": {"post": ..., "english": ..., "about": ...}}.
@@ -186,9 +191,10 @@ def located(e, post):
 
 def accept(pid, e, posts, verdict):
     """Validate one verdict. Pure, for tests."""
-    out = {"opened": None, "english": None, "about": None}
+    out = {"opened": None, "english": None, "about": None, "delivery_only": False}
     if not isinstance(verdict, dict):
         return out
+    out["delivery_only"] = verdict.get("delivery_only") is True
     by_url = {p["url"]: p for p in posts}
     p = by_url.get(verdict.get("post"))
     if p and p.get("posted") and p["posted"] >= e["licensed"] and located(e, p):
@@ -257,7 +263,8 @@ def main(argv):
 
     with_posts = [f for f in found if f[2]]
     print(f"{len(found)} searched, {len(with_posts)} with posts naming the place")
-    results = {mgt: {"opened": None, "english": None, "about": None} for mgt, _, posts in found
+    results = {mgt: {"opened": None, "english": None, "about": None, "delivery_only": False}
+               for mgt, _, posts in found
                if not posts}
     for i in range(0, len(with_posts), JUDGE_BATCH):
         batch = with_posts[i:i + JUDGE_BATCH]
