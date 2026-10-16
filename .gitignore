@@ -2,3 +2,4 @@ data/
 public/
 __pycache__/
 .wrangler/
+.DS_Store
