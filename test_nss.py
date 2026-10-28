@@ -6,6 +6,7 @@ import datetime as dt
 import unittest
 
 import nss_build as B
+import nss_card as K
 import nss_common as C
 import nss_harvest as H
 
@@ -239,6 +240,57 @@ class Build(unittest.TestCase):
         st["licences"]["1"]["name"] = "</script><b>"
         html = B.page("t", "l", "", B.listed(st, {}, {}), "/")
         self.assertNotIn("</script><b>", html)
+
+
+def place(name="부빔", en="Bubim", group="restaurant", district="YS", day="2026-10-26",
+          type_en="Korean", opened=None):
+    return {"name": name, "name_en": en, "group": group, "district": district,
+            "date": dt.date.fromisoformat(day), "type_en": type_en, "opened": opened}
+
+
+class Card(unittest.TestCase):
+    def test_newest_day_waits_for_a_later_one(self):
+        es = [place(day="2026-10-23"), place(day="2026-10-26"), place(day="2026-10-27")]
+        self.assertEqual(K.complete_days(es), [dt.date(2026, 10, 23), dt.date(2026, 10, 26)])
+        self.assertEqual(K.next_day(es, set()), dt.date(2026, 10, 26))
+
+    def test_a_posted_day_is_not_posted_again(self):
+        es = [place(day="2026-10-23"), place(day="2026-10-26"), place(day="2026-10-27")]
+        self.assertEqual(K.next_day(es, {"2026-10-26"}), dt.date(2026, 10, 23))
+        self.assertIsNone(K.next_day(es, {"2026-10-26", "2026-10-23"}))
+
+    def test_one_day_on_record_posts_nothing(self):
+        self.assertIsNone(K.next_day([place()], set()))
+
+    def test_opened_then_independents_before_branches(self):
+        es = [place("세븐일레븐 르네스퀘어점", "7-Eleven, Reune Square branch"),
+              place("아띠몽", "Attimong", district="MP"),
+              place("도손", "Doson", opened={"posted": "2026-10-27", "url": "u"}, district="JG")]
+        names = [e["name_en"] for e in K.highlights(es, n=3)]
+        self.assertEqual(names, ["Doson", "Attimong", "7-Eleven, Reune Square branch"])
+
+    def test_highlights_spread_across_kinds(self):
+        es = [place(f"식당{i}", f"R{i}") for i in range(4)] + [place("바", "Zed", group="bar")]
+        groups = [e["group"] for e in K.highlights(es, n=2)]
+        self.assertEqual(sorted(groups), ["bar", "restaurant"])
+
+    def test_card_name_drops_a_trailing_gloss_only(self):
+        self.assertEqual(K.card_name("Susu Gimbap (seaweed rice rolls)"), "Susu Gimbap")
+        self.assertEqual(K.card_name("L (Bar) House"), "L (Bar) House")
+        self.assertEqual(K.card_name(None), "")
+
+    def test_cuisines_keep_their_capital(self):
+        self.assertEqual(K.kind_text("Chinese"), "Chinese")
+        self.assertEqual(K.kind_text("Café or snack bar"), "café or snack bar")
+
+    def test_alt_text_lists_every_place(self):
+        es = [place(f"식당{i}", f"R{i}") for i in range(12)]
+        alt = K.alt_text(dt.date(2026, 10, 26), es)
+        self.assertTrue(all(f"R{i} (식당{i})" in alt for i in range(12)))
+        self.assertIn("12 new places licensed on Monday, Oct. 26", alt)
+
+    def test_headline_singular(self):
+        self.assertEqual(K.headline(1), "1 new place licensed")
 
 
 if __name__ == "__main__":
