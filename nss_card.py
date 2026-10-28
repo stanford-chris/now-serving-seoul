@@ -142,11 +142,9 @@ def build_html(day, es):
     kind_html = "".join(
         f'<span class="k"><span class="dot {k}"></span>{plural(kinds[k], k)}</span>'
         for k in GROUPS if kinds[k])
-    top = max(c for _, c in districts)
-    dist_html = "".join(
-        f'<div class="d"><span class="dn">{esc(name)}</span>'
-        f'<span class="meter"><span style="width:{100 * c / top:.1f}%"></span></span>'
-        f'<span class="dc">{c}</span></div>' for name, c in districts)
+    # Plain counts, no bars: the bars added nothing the numbers did not say
+    # (his call, 29 October 2026).
+    dist_html = "".join(f'<span>{esc(name)} <b>{c}</b></span>' for name, c in districts)
     rows = []
     for e in highlights(es):
         en = card_name(e.get("name_en"))
@@ -173,12 +171,8 @@ h1{{font:700 34px/1.1 Georgia,"Times New Roman",serif;margin:10px 0 2px;letter-s
 .kinds{{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0 0 12px}}
 .dot{{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;flex:none}}
 .dot.restaurant{{background:#c2410c}}.dot.bar{{background:#7c3aed}}.dot.cafe{{background:#0f766e}}
-.dists{{display:grid;grid-template-columns:1fr 1fr;gap:3px 22px;margin:0 0 14px;font-size:13px}}
-.d{{display:flex;align-items:center;gap:8px}}
-.dn{{width:74px;flex:none}}.dc{{width:18px;text-align:right;font-variant-numeric:tabular-nums;color:#6a645b}}
-/* "meter", never "bar": .dot.bar is the bars' dot, and a shared class stretched it. */
-.meter{{flex:1;height:6px;background:#efe9df;border-radius:3px;overflow:hidden}}
-.meter span{{display:block;height:100%;background:#c2410c;opacity:.75}}
+.dists{{display:grid;grid-template-columns:repeat(4,max-content);gap:3px 26px;margin:0 0 14px;font-size:14px;color:#6a645b}}
+.dists span{{white-space:nowrap}}.dists b{{color:#1d1b18;font-weight:600}}
 h2{{font:600 12px/1 -apple-system,sans-serif;letter-spacing:.08em;text-transform:uppercase;
 color:#6a645b;margin:0 0 6px;padding-top:10px;border-top:1px solid #e4dfd6}}
 ul{{list-style:none;margin:0;padding:0}}
