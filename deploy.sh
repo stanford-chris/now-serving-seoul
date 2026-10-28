@@ -12,7 +12,20 @@ step() {
   local name="$1"; shift
   "$@" || { local rc=$?; echo "!! $name FAILED (exit $rc)"; [ "$rc" -gt "$worst" ] && worst=$rc; return $rc; }
 }
-step "harvest" python3 nss_harvest.py || true
-step "build" python3 nss_build.py || { echo "!! build failed: not deploying"; exit "$worst"; }
-step "deploy" npx wrangler@latest deploy || true
+# python.org 3.13 by path, never a bare python3: under launchd's PATH that can
+# be Homebrew's, which is missing packages (sar-page and london-transit-art
+# both failed that way in October 2026).
+PY=/Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+
+step "harvest" "$PY" nss_harvest.py || true
+# English names for places not yet named: one Fable call per 40 new names,
+# cached, so a quiet day costs nothing. A failed batch stays Korean-only and is
+# retried tomorrow.
+step "names" "$PY" nss_names.py || true
+# The weekly blog pass ("opened", and a post's own English name), Mondays only.
+if [ "$(TZ=Asia/Seoul date +%u)" = 1 ]; then
+  step "blogs" "$PY" nss_blogs.py || true
+fi
+step "build" "$PY" nss_build.py || { echo "!! build failed: not deploying"; exit "$worst"; }
+step "deploy" /opt/homebrew/bin/npx --yes wrangler@latest deploy || true
 exit "$worst"
