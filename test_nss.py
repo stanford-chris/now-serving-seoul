@@ -256,8 +256,14 @@ class Card(unittest.TestCase):
 
     def test_a_posted_day_is_not_posted_again(self):
         es = [place(day="2026-10-23"), place(day="2026-10-26"), place(day="2026-10-27")]
-        self.assertEqual(K.next_day(es, {"2026-10-26"}), dt.date(2026, 10, 23))
-        self.assertIsNone(K.next_day(es, {"2026-10-26", "2026-10-23"}))
+        self.assertIsNone(K.next_day(es, {"2026-10-26"}))
+
+    def test_never_goes_back_to_an_older_unposted_day(self):
+        es = [place(day="2026-10-21"), place(day="2026-10-23"), place(day="2026-10-26"),
+              place(day="2026-10-27")]
+        # Oct. 21 posted, Oct. 23 missed: the next post is Oct. 26, never Oct. 23.
+        self.assertEqual(K.next_day(es, {"2026-10-21"}), dt.date(2026, 10, 26))
+        self.assertIsNone(K.next_day(es, {"2026-10-21", "2026-10-26"}))
 
     def test_one_day_on_record_posts_nothing(self):
         self.assertIsNone(K.next_day([place()], set()))

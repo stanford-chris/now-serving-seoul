@@ -90,11 +90,15 @@ def complete_days(entries):
 
 
 def next_day(entries, posted):
-    """The newest complete day not yet posted, or None."""
-    for d in reversed(complete_days(entries)):
-        if d.isoformat() not in posted:
-            return d
-    return None
+    """The newest complete day, if it is later than every day already posted;
+    else None. Only forward: once Oct. 26 has posted, an older day that never
+    did (a stalled harvest, a failed run) is left alone rather than posted a
+    week late out of order."""
+    days = complete_days(entries)
+    if not days:
+        return None
+    last = max((dt.date.fromisoformat(d) for d in posted), default=None)
+    return days[-1] if last is None or days[-1] > last else None
 
 
 def is_branch(e):
