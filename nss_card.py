@@ -150,7 +150,7 @@ def build_html(day, es):
     rows = []
     for e in highlights(es):
         en = card_name(e.get("name_en"))
-        ko = e["name"]
+        ko = e.get("name_ko") or e["name"]
         name = (f'{esc(en)} <span class="ko" lang="ko">{esc(ko)}</span>'
                 if en and en != ko else f'<span lang="ko">{esc(ko)}</span>')
         tag = '<span class="op">Opened</span>' if e.get("opened") else ""
@@ -318,7 +318,8 @@ def alt_text(day, es):
              "All of them:"]
     for e in sorted(es, key=lambda e: (DISTRICTS[e["district"]][0], e["name_en"] or e["name"])):
         en = e.get("name_en")
-        name = f"{en} ({e['name']})" if en and en != e["name"] else e["name"]
+        ko = e.get("name_ko") or e["name"]
+        name = f"{en} ({ko})" if en and en != e["name"] else e["name"]
         lines.append(f"{name}, {kind_text(e['type_en'])}, {DISTRICTS[e['district']][0]}"
                      + (", opened" if e.get("opened") else "") + ".")
     return "\n".join(lines)

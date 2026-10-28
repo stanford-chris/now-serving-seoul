@@ -120,6 +120,29 @@ def title_gloss(en):
     return re.sub(r"\(([^()]*)\)", fix, en)
 
 
+def _words(s):
+    return re.findall(r"[0-9a-z]+", re.sub(r"[`'’]", "", (s or "").lower()))
+
+
+def korean_shown(name, en):
+    """The Korean name to show beside the English. The register often writes
+    a place's English into its Korean name ("얌얌닭발(YamYam)"), and showing
+    both read "YamYam 얌얌닭발(YamYam)", twice to a screen reader. So a
+    trailing bracket is dropped when the English shown already says it
+    (case, spaces and punctuation aside). 134 of 1,349 places, 29 October
+    2026. The licence name itself is kept for search and de-duplication."""
+    m = re.match(r"^(.*?)\s*\(([^()]*[A-Za-z][^()]*)\)\s*$", name or "")
+    if not (m and m.group(1)):
+        return name
+    said, shown = _words(m.group(2)), _words(en)
+    # Whole words, in order: a bare letter must not match inside a longer
+    # word ("(L)" is not said by "Elle Bistro").
+    n = len(said)
+    if said and any(shown[i:i + n] == said for i in range(len(shown) - n + 1)):
+        return m.group(1)
+    return name
+
+
 def listed(state, names=None, blogs=None):
     """Every place shown, newest first. English name, in order of preference:
     a blog post's (nss_blogs.py), the licence's own bracketed English, the
@@ -138,8 +161,9 @@ def listed(state, names=None, blogs=None):
         b = blogs.get(mgt) or {}
         if b.get("delivery_only"):
             continue
-        out.append(dict(e, id=mgt, date=d, name=name,
-                        name_en=title_gloss(b.get("english") or e.get("name_en") or names.get(name)),
+        name_en = title_gloss(b.get("english") or e.get("name_en") or names.get(name))
+        out.append(dict(e, id=mgt, date=d, name=name, name_ko=korean_shown(name, name_en),
+                        name_en=name_en,
                         opened=b.get("opened"), about=b.get("about")))
     # One place, two licences: the register sometimes holds the same name at
     # the same street address twice (초초맛차, 을지로 281, on 8 October 2026,
@@ -166,7 +190,7 @@ def entry_html(e):
     district = DISTRICTS[e["district"]][0]
     where = f"{district}, {esc(e['dong'])}" if e.get("dong") else district
     if e.get("name_en") and e["name_en"] != e["name"]:
-        title = f'{esc(e["name_en"])} <span class="ko" lang="ko">{esc(e["name"])}</span>'
+        title = f'{esc(e["name_en"])} <span class="ko" lang="ko">{esc(e["name_ko"])}</span>'
     else:
         title = f'<span lang="ko">{esc(e["name"])}</span>'
     opened = e.get("opened")
@@ -218,7 +242,7 @@ def filters_html(entries):
 
 
 def points(entries):
-    return [{"n": e["name"], "e": e.get("name_en") or "", "t": e["type_en"],
+    return [{"n": e["name_ko"], "e": e.get("name_en") or "", "t": e["type_en"],
              "g": e["group"], "d": e["district"], "y": e["lat"], "x": e["lon"],
              "k": kakao_link(e)} for e in entries if "lat" in e]
 

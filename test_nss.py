@@ -242,6 +242,20 @@ class Build(unittest.TestCase):
         self.assertNotIn("</script><b>", html)
 
 
+class KoreanShown(unittest.TestCase):
+    def test_bracketed_english_already_shown_is_dropped(self):
+        self.assertEqual(B.korean_shown("얌얌닭발(YamYam)", "YamYam"), "얌얌닭발")
+        self.assertEqual(B.korean_shown("엘(L)", "L"), "엘")
+        self.assertEqual(B.korean_shown("위스위츠 아카이브 (we sweets archive)", "We Sweets Archive"),
+                         "위스위츠 아카이브")
+
+    def test_kept_when_the_english_shown_says_something_else(self):
+        self.assertEqual(B.korean_shown("엘(L)", "Elle Bistro"), "엘(L)")
+        self.assertEqual(B.korean_shown("가게(2층)", "Gage"), "가게(2층)")    # no Latin in it
+        self.assertEqual(B.korean_shown("(L)", "L"), "(L)")                  # nothing left
+        self.assertEqual(B.korean_shown("부빔", None), "부빔")
+
+
 class TitleGloss(unittest.TestCase):
     def test_his_examples(self):
         self.assertEqual(B.title_gloss("Matsarang (love of flavor)"), "Matsarang (Love of Flavor)")
@@ -267,7 +281,7 @@ class TitleGloss(unittest.TestCase):
 
 def place(name="부빔", en="Bubim", group="restaurant", district="YS", day="2026-10-26",
           type_en="Korean", opened=None):
-    return {"name": name, "name_en": en, "group": group, "district": district,
+    return {"name": name, "name_ko": name, "name_en": en, "group": group, "district": district,
             "date": dt.date.fromisoformat(day), "type_en": type_en, "opened": opened}
 
 
