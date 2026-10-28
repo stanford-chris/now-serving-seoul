@@ -160,7 +160,7 @@ def list_html(entries):
     parts = []
     for d in sorted(by_day, reverse=True):
         items = by_day[d]
-        parts.append(f'<section class="day"><h2>Licensed {day_text(d)} '
+        parts.append(f'<section class="day"><h2 class="date">Licensed {day_text(d)} '
                      f'<span class="count">{len(items)}</span></h2><ul>'
                      + "".join(entry_html(e) for e in items) + "</ul></section>")
     return "".join(parts) or "<p>No licenses in this period.</p>"
@@ -222,6 +222,9 @@ vertical-align:baseline}
 .dot.cafe{background:var(--cafe)}
 .day h2{font:600 1.15rem/1.3 Georgia,serif;margin:28px 0 8px;padding-bottom:6px;
 border-bottom:1px solid var(--rule)}
+/* The list's date headings: sans and smaller than the serif section heads,
+   his call (29 October 2026): Georgia at 1.15rem outweighed the places. */
+.day h2.date{font:600 1rem/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 .count{color:var(--muted);font:400 .9rem system-ui,sans-serif;margin-left:6px}
 ul{list-style:none;margin:0;padding:0}
 li{padding:10px 0;border-bottom:1px solid var(--rule)}
