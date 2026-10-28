@@ -377,6 +377,11 @@ too, from the posts. The Korean name from the license is always shown beside the
 and department stores; licenses marked temporary, which are almost all food-hall pop-ups;
 anything at a department-store or food-hall address; and a second license for a place
 already listed at the same address.</p>
+<h3>On Bluesky</h3>
+<p><a href="https://bsky.app/profile/nowservingseoul.com">@nowservingseoul.com</a> posts each
+day’s licenses as a card, with a map of where they are in a reply. The card names five of the
+day’s places: any a blog post says has opened, then independents ahead of chain branches, spread
+across kinds and districts. It is a sample, not a recommendation.</p>
 <h3>How current</h3>
 <p>The register runs a couple of days behind. The newest license on record is dated
 {newest}; the site was last updated {esc(stamp_text(state.get("updated")))} (Seoul time).</p>

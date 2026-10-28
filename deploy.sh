@@ -27,5 +27,13 @@ if [ "$(TZ=Asia/Seoul date +%u)" = 1 ]; then
   step "blogs" "$PY" nss_blogs.py || true
 fi
 step "build" "$PY" nss_build.py || { echo "!! build failed: not deploying"; exit "$worst"; }
-step "deploy" /opt/homebrew/bin/npx --yes wrangler@latest deploy || true
+# The daily Bluesky post (since 30 October 2026, his call): only once the site
+# that the post links to is up, so a failed deploy posts nothing. A quiet day
+# (no new complete licence date) exits 0; a failed map reply exits 1 with the
+# card already recorded, so tomorrow does not post it again.
+if step "deploy" /opt/homebrew/bin/npx --yes wrangler@latest deploy; then
+  step "post" "$PY" nss_post.py || true
+else
+  echo "!! deploy failed: not posting"
+fi
 exit "$worst"
