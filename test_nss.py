@@ -312,6 +312,9 @@ class Card(unittest.TestCase):
         alt = K.map_alt(dt.date(2026, 10, 26), es)
         self.assertIn("Gangnam 2, Mapo 1", alt)
 
+    def test_handle_proof_is_the_did_alone(self):
+        self.assertRegex(C.BLUESKY_DID, r"^did:plc:[a-z2-7]{24}$")
+
     def test_headline_singular(self):
         self.assertEqual(K.headline(1), "1 new place licensed")
 

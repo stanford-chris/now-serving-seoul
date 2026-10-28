@@ -21,7 +21,7 @@ import sys
 import urllib.parse
 from collections import defaultdict
 
-from nss_common import (DISTRICTS, GROUPS, HERE, NEIGHBORHOODS, PUBLIC, STATE,
+from nss_common import (BLUESKY_DID, DISTRICTS, GROUPS, HERE, NEIGHBORHOODS, PUBLIC, STATE,
                         district_count, display_name, lookup_address)
 
 BRAND = HERE / "brand"
@@ -436,8 +436,11 @@ def main():
     # icon did not appear with the SVG alone (10 October 2026).
     shutil.copy(BRAND / "favicon.ico", tmp / "favicon.ico")
     shutil.copy(BRAND / "icon-180.png", tmp / "apple-touch-icon.png")
+    # Proves the Bluesky handle @nowservingseoul.com: the DID and nothing else.
+    write(tmp / ".well-known" / "atproto-did", BLUESKY_DID)
     write(tmp / "_headers", "/*\n  Cache-Control: public, max-age=300\n"
-                            "  Referrer-Policy: strict-origin-when-cross-origin\n")
+                            "  Referrer-Policy: strict-origin-when-cross-origin\n"
+                            "/.well-known/atproto-did\n  Content-Type: text/plain; charset=utf-8\n")
 
     shutil.rmtree(PUBLIC, ignore_errors=True)
     os.replace(tmp, PUBLIC)

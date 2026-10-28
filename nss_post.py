@@ -35,10 +35,9 @@ from PIL import Image
 
 import nss_build as b
 import nss_card as K
-from nss_common import DATA, DISTRICTS, STATE
+from nss_common import BLUESKY_DID as DID, DATA, DISTRICTS, STATE
 
 POST_STATE = DATA / "post_state.json"
-DID = "did:plc:gnx7l3efyksa767sxgxhxlfn"
 KEYCHAIN = ("nowservingseoul-bluesky", "nowservingseoul.com")    # service, account
 MAX_BLOB = 950_000        # Bluesky refuses an image blob over about 976 KB
 MAP_REPLY_TEXT = "Where they are, by district."

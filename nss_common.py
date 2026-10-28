@@ -13,6 +13,10 @@ HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
 PUBLIC = HERE / "public"
 STATE = DATA / "licences.json"
+# The Bluesky account's DID. The site serves it at /.well-known/atproto-did,
+# which is what proves the handle @nowservingseoul.com (his choice over a DNS
+# record, 29 October 2026); nss_post.py signs in with it.
+BLUESKY_DID = "did:plc:gnx7l3efyksa767sxgxhxlfn"
 GEOCODE_CACHE = DATA / "geocode.json"
 
 API = "http://openapi.seoul.go.kr:8088/{key}/json/{svc}/{a}/{b}/"
