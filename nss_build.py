@@ -16,6 +16,7 @@ import datetime as dt
 import html
 import json
 import os
+import re
 import shutil
 import sys
 import urllib.parse
@@ -86,6 +87,39 @@ def load(path):
         return {}
 
 
+# Words a title leaves lowercase unless they come first or last.
+MINOR = {"a", "an", "the", "and", "but", "or", "nor", "for", "of", "in", "on", "at",
+         "to", "by", "with", "from", "as"}
+
+
+def title_gloss(en):
+    """Title-case each bracketed meaning in an English name, his call
+    (29 October 2026): "Matsarang (love of flavor)" -> "Matsarang (Love of
+    Flavor)". Capitals are only ever added, never taken away ("NH", "BBQ" and
+    "Yun's" survive), each part of a hyphenated word is capitalized
+    ("Charcoal-Grilled"), and a word after ";" starts afresh."""
+    if not en or "(" not in en:
+        return en
+
+    def fix(m):
+        parts = re.split(r"(\s+|;\s*)", m.group(1))
+        words = [i for i, w in enumerate(parts) if w.strip() and w.strip() != ";"]
+        out, start = [], True
+        for i, w in enumerate(parts):
+            if i not in words:
+                out.append(w)
+                start = start or ";" in w
+                continue
+            last = i == words[-1]
+            if w.lower() in MINOR and not start and not last:
+                out.append(w)
+            else:
+                out.append("-".join(x[:1].upper() + x[1:] for x in w.split("-")))
+            start = False
+        return "(" + "".join(out) + ")"
+    return re.sub(r"\(([^()]*)\)", fix, en)
+
+
 def listed(state, names=None, blogs=None):
     """Every place shown, newest first. English name, in order of preference:
     a blog post's (nss_blogs.py), the licence's own bracketed English, the
@@ -105,7 +139,7 @@ def listed(state, names=None, blogs=None):
         if b.get("delivery_only"):
             continue
         out.append(dict(e, id=mgt, date=d, name=name,
-                        name_en=b.get("english") or e.get("name_en") or names.get(name),
+                        name_en=title_gloss(b.get("english") or e.get("name_en") or names.get(name)),
                         opened=b.get("opened"), about=b.get("about")))
     # One place, two licences: the register sometimes holds the same name at
     # the same street address twice (초초맛차, 을지로 281, on 8 October 2026,

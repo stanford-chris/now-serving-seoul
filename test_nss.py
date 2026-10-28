@@ -242,6 +242,29 @@ class Build(unittest.TestCase):
         self.assertNotIn("</script><b>", html)
 
 
+class TitleGloss(unittest.TestCase):
+    def test_his_examples(self):
+        self.assertEqual(B.title_gloss("Matsarang (love of flavor)"), "Matsarang (Love of Flavor)")
+        self.assertEqual(B.title_gloss("Dalkom Table (sweet table)"), "Dalkom Table (Sweet Table)")
+
+    def test_capitals_only_added(self):
+        self.assertEqual(B.title_gloss("Yun Sikdang (Yun's restaurant)"), "Yun Sikdang (Yun's Restaurant)")
+        self.assertEqual(B.title_gloss("X (NH Nonghyup Tower, 14th floor)"),
+                         "X (NH Nonghyup Tower, 14th Floor)")
+
+    def test_hyphens_semicolons_and_minor_words(self):
+        self.assertEqual(B.title_gloss("Geobugi (turtle; charcoal-grilled eel)"),
+                         "Geobugi (Turtle; Charcoal-Grilled Eel)")
+        self.assertEqual(B.title_gloss("Uju Dak Hof (chicken and beer)"), "Uju Dak Hof (Chicken and Beer)")
+        self.assertEqual(B.title_gloss("Ka (a place to sit in)"), "Ka (A Place to Sit In)")
+
+    def test_a_bracket_mid_name_and_none(self):
+        self.assertEqual(B.title_gloss("Garam Guksi (noodles), Nonhyeon branch"),
+                         "Garam Guksi (Noodles), Nonhyeon branch")
+        self.assertEqual(B.title_gloss("Hey Jude"), "Hey Jude")
+        self.assertIsNone(B.title_gloss(None))
+
+
 def place(name="부빔", en="Bubim", group="restaurant", district="YS", day="2026-10-26",
           type_en="Korean", opened=None):
     return {"name": name, "name_en": en, "group": group, "district": district,
