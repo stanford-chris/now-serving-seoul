@@ -82,8 +82,8 @@ class Post(unittest.TestCase):
         self.assertIn("Monday, Oct. 26", c.posts[0]["text"].build_text())
         facets = [f.features[0] for f in c.posts[0]["text"].build_facets()]
         self.assertEqual(facets[0].uri, "https://nowservingseoul.com/")
-        self.assertEqual([f.tag for f in facets[1:]], ["Seoul", "FoodSky"])
-        self.assertTrue(c.posts[0]["text"].build_text().endswith("\n#Seoul #FoodSky"))
+        self.assertEqual([f.tag for f in facets[1:]], ["Seoul"])
+        self.assertTrue(c.posts[0]["text"].build_text().endswith("\n#Seoul"))
         state = json.loads(P.POST_STATE.read_text())["posted"]
         self.assertEqual(state["2026-10-26"]["uri"], "at://post/1")
         self.assertEqual(state["2026-10-26"]["map_uri"], "at://post/2")

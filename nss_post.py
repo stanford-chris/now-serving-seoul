@@ -41,11 +41,11 @@ POST_STATE = DATA / "post_state.json"
 KEYCHAIN = ("nowservingseoul-bluesky", "nowservingseoul.com")    # service, account
 MAX_BLOB = 950_000        # Bluesky refuses an image blob over about 976 KB
 MAP_REPLY_TEXT = "Where they are, by district."
-# His choice, 29 October 2026, from a week of search counts: #FoodSky is the
-# one food tag with a live audience (393 posts, 139 accounts, median 6
-# likes); #Seoul is where the city's readers look. On the card post only:
-# hashtag feeds take top-level posts, never replies.
-TAGS = ("Seoul", "FoodSky")
+# #Seoul alone, his call, 29 October 2026. #FoodSky was measured as the one
+# food tag with a live audience and dropped on reflection: the card is
+# licence data, not food. On the card post only: hashtag feeds take
+# top-level posts, never replies.
+TAGS = ("Seoul",)
 
 
 def load_posted():
