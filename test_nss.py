@@ -289,6 +289,23 @@ class Card(unittest.TestCase):
         self.assertTrue(all(f"R{i} (식당{i})" in alt for i in range(12)))
         self.assertIn("12 new places licensed on Monday, Oct. 26", alt)
 
+    def test_map_keeps_every_place_of_the_day_in_frame(self):
+        backdrop = [{"lon": 126.95 + i / 1000, "lat": 37.52 + i / 2000} for i in range(200)]
+        far = (127.30, 37.40)            # a place well outside the backdrop
+        to_xy, height = K.project([(b["lon"], b["lat"]) for b in backdrop], keep=[far])
+        x, y = to_xy(*far)
+        self.assertTrue(0 <= x <= K.MAP_WIDTH and 0 <= y <= height)
+
+    def test_map_frame_ignores_stray_backdrop_dots(self):
+        pts = [(126.95 + i / 1000, 37.52) for i in range(200)] + [(127.9, 37.52)]
+        to_xy, _ = K.project(pts)
+        self.assertGreater(to_xy(127.9, 37.52)[0], K.MAP_WIDTH)
+
+    def test_map_alt_names_each_district_count(self):
+        es = [place(district="GN"), place(district="GN"), place(district="MP")]
+        alt = K.map_alt(dt.date(2026, 10, 26), es)
+        self.assertIn("Gangnam 2, Mapo 1", alt)
+
     def test_headline_singular(self):
         self.assertEqual(K.headline(1), "1 new place licensed")
 

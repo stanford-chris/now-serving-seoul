@@ -27,6 +27,7 @@ import argparse
 import datetime as dt
 import html
 import json
+import math
 import re
 import subprocess
 import sys
@@ -142,9 +143,6 @@ def build_html(day, es):
     kind_html = "".join(
         f'<span class="k"><span class="dot {k}"></span>{plural(kinds[k], k)}</span>'
         for k in GROUPS if kinds[k])
-    # Plain counts, no bars: the bars added nothing the numbers did not say
-    # (his call, 29 October 2026).
-    dist_html = "".join(f'<span>{esc(name)} <b>{c}</b></span>' for name, c in districts)
     rows = []
     for e in highlights(es):
         en = card_name(e.get("name_en"))
@@ -168,11 +166,9 @@ font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6a645b}}
 .mast b{{color:#c2410c;letter-spacing:.1em}}
 h1{{font:700 34px/1.1 Georgia,"Times New Roman",serif;margin:10px 0 2px;letter-spacing:-.01em}}
 .date{{font:italic 17px Georgia,serif;color:#6a645b;margin:0 0 12px}}
-.kinds{{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0 0 12px}}
+.kinds{{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0 0 16px}}
 .dot{{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;flex:none}}
 .dot.restaurant{{background:#c2410c}}.dot.bar{{background:#7c3aed}}.dot.cafe{{background:#0f766e}}
-.dists{{display:grid;grid-template-columns:repeat(4,max-content);gap:3px 26px;margin:0 0 14px;font-size:14px;color:#6a645b}}
-.dists span{{white-space:nowrap}}.dists b{{color:#1d1b18;font-weight:600}}
 h2{{font:600 12px/1 -apple-system,sans-serif;letter-spacing:.08em;text-transform:uppercase;
 color:#6a645b;margin:0 0 6px;padding-top:10px;border-top:1px solid #e4dfd6}}
 ul{{list-style:none;margin:0;padding:0}}
@@ -189,9 +185,98 @@ padding:0 5px;margin-left:7px;flex:none}}
 <h1>{headline(len(es))}</h1>
 <p class="date">{b.day_text(day)}</p>
 <div class="kinds">{kind_html}</div>
-<div class="dists">{dist_html}</div>
 <h2>Among them</h2><ul>{"".join(rows)}</ul>{more_html}
 </div></body></html>"""
+
+
+MAP_WIDTH = 600          # CSS px, like the card
+MAP_PAD = 34
+KIND_COLORS = {"restaurant": "#c2410c", "bar": "#7c3aed", "cafe": "#0f766e"}
+
+
+def project(points, keep=()):
+    """lon/lat -> x/y on a MAP_WIDTH canvas. A flat projection with longitude
+    shrunk by cos(latitude): over one city that is as true as Web Mercator to
+    the eye, with no tiles needed. The frame is fitted to the middle 98
+    percent of `points` (a few strays left a band of empty map) and widened to
+    take in every point in `keep`, the day's places, so none falls off."""
+    lat0 = sum(la for _, la in points) / len(points)
+    k = math.cos(math.radians(lat0))
+    xs = sorted(lo * k for lo, _ in points)
+    ys = sorted(-la for _, la in points)
+    cut = len(points) // 100
+    x0, x1 = xs[cut], xs[-1 - cut]
+    y0, y1 = ys[cut], ys[-1 - cut]
+    for lo, la in keep:
+        x0, x1 = min(x0, lo * k), max(x1, lo * k)
+        y0, y1 = min(y0, -la), max(y1, -la)
+    scale = (MAP_WIDTH - 2 * MAP_PAD) / (x1 - x0)
+    height = (y1 - y0) * scale + 2 * MAP_PAD
+
+    def to_xy(lon, lat):
+        return MAP_PAD + (lon * k - x0) * scale, MAP_PAD + (-lat - y0) * scale
+    return to_xy, height
+
+
+def map_html(day, es, backdrop):
+    """The thread's second post: every place the site has ever tracked as
+    faint dots, which draw the eight districts by themselves, and the day's
+    places on top in their kinds' colours, each district labelled with its
+    count. Drawn from our own data: OpenStreetMap's tile policy rules out
+    fetching tiles for an image nobody is viewing (read 29 October 2026)."""
+    pts = [(e["lon"], e["lat"]) for e in backdrop]
+    to_xy, height = project(pts, [(e["lon"], e["lat"]) for e in es if "lat" in e])
+    grey = "".join(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="1.6"/>'
+                   for x, y in (to_xy(*p) for p in pts)
+                   if -4 < x < MAP_WIDTH + 4 and -4 < y < height + 4)
+    today = "".join(
+        f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="{KIND_COLORS[e["group"]]}"/>'
+        for e in sorted(es, key=lambda e: e["group"])
+        if "lat" in e for x, y in [to_xy(e["lon"], e["lat"])])
+    counts = Counter(e["district"] for e in es)
+    labels = []
+    for code, (name, _) in DISTRICTS.items():
+        mine = [to_xy(e["lon"], e["lat"]) for e in backdrop if e["district"] == code]
+        if not mine:
+            continue
+        mx = sorted(x for x, _ in mine)[len(mine) // 2]
+        my = sorted(y for _, y in mine)[len(mine) // 2]
+        n = counts.get(code, 0)
+        labels.append(f'<text x="{mx:.1f}" y="{my:.1f}" class="{"on" if n else "off"}">'
+                      f'{esc(name)}{f" <tspan>{n}</tspan>" if n else ""}</text>')
+    legend = "".join(
+        f'<span><i style="background:{KIND_COLORS[k]}"></i>{GROUPS[k]}</span>' for k in GROUPS)
+    return f"""<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{{margin:0;background:#ff00ff}}
+.card{{width:{MAP_WIDTH}px;background:#fbfaf7;color:#1d1b18;
+font:14px/1.4 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+border-top:8px solid #c2410c;padding:16px 0 12px;box-sizing:border-box}}
+.mast{{display:flex;justify-content:space-between;align-items:baseline;padding:0 26px;
+font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6a645b}}
+.mast b{{color:#c2410c;letter-spacing:.1em}}
+svg{{display:block}}
+.bg circle{{fill:#ddd5c8}}
+text{{font:600 14px -apple-system,sans-serif;text-anchor:middle;paint-order:stroke;
+stroke:#fbfaf7;stroke-width:5px;stroke-linejoin:round}}
+text.on{{fill:#1d1b18}}text.off{{fill:#a39c90;font-weight:400}}
+text tspan{{fill:#c2410c;font-weight:700}}
+.foot{{display:flex;justify-content:space-between;align-items:center;padding:0 26px;
+font-size:12px;color:#6a645b}}
+.foot span{{margin-right:14px}}
+.foot i{{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}}
+</style></head><body><div class="card">
+<div class="mast"><b>Where they are</b><span>{b.day_text(day)}</span></div>
+<svg width="{MAP_WIDTH}" height="{height:.0f}" viewBox="0 0 {MAP_WIDTH} {height:.0f}">
+<g class="bg">{grey}</g><g>{today}</g><g>{"".join(labels)}</g></svg>
+<div class="foot"><div>{legend}</div><div>Gray: every place listed so far</div></div>
+</div></body></html>"""
+
+
+def map_alt(day, es):
+    _, districts = summary(day, es)
+    return (f"Map of the {len(es)} places licensed on {b.day_text(day)}, by district: "
+            + ", ".join(f"{n} {c}" for n, c in districts)
+            + ". Each is a dot colored by kind, over gray dots for every place listed so far.")
 
 
 def render(page, out):
@@ -257,8 +342,14 @@ def main():
         if day is None:
             sys.exit("no complete day to post")
     es = days[day]
+    state = json.loads(STATE.read_text())
+    backdrop = [e for e in state["licences"].values()
+                if "lat" in e and not e.get("excluded") and e["district"] in DISTRICTS]
     path, (w, h) = render(build_html(day, es), DRAFTS / f"{day}.png")
-    print(f"card: {path} ({w}x{h})\n\npost text:\n{post_text(day, es)}\n\nalt text:\n{alt_text(day, es)}")
+    mpath, (mw, mh) = render(map_html(day, es, backdrop), DRAFTS / f"{day}-map.png")
+    print(f"card: {path} ({w}x{h})\nmap: {mpath} ({mw}x{mh})\n\npost text:\n"
+          f"{post_text(day, es)}\n\nalt text:\n{alt_text(day, es)}\n\nmap alt text:\n"
+          f"{map_alt(day, es)}")
 
 
 if __name__ == "__main__":
