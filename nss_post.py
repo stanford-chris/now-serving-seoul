@@ -41,6 +41,11 @@ POST_STATE = DATA / "post_state.json"
 KEYCHAIN = ("nowservingseoul-bluesky", "nowservingseoul.com")    # service, account
 MAX_BLOB = 950_000        # Bluesky refuses an image blob over about 976 KB
 MAP_REPLY_TEXT = "Where they are, by district."
+# His choice, 29 October 2026, from a week of search counts: #FoodSky is the
+# one food tag with a live audience (393 posts, 139 accounts, median 6
+# likes); #Seoul is where the city's readers look. On the card post only:
+# hashtag feeds take top-level posts, never replies.
+TAGS = ("Seoul", "FoodSky")
 
 
 def load_posted():
@@ -69,11 +74,15 @@ def image_bytes(path):
 
 
 def card_text(day, es):
-    """The post text as a TextBuilder: the site name is a link."""
+    """The post text as a TextBuilder: the site name is a link and the tags
+    are tag facets, so hashtag feeds can see them."""
     from atproto import client_utils
     text = K.post_text(day, es)
     head, site = text.rsplit(K.SITE, 1)[0], K.SITE
-    return client_utils.TextBuilder().text(head).link(site, f"https://{site}/")
+    tb = client_utils.TextBuilder().text(head).link(site, f"https://{site}/").text("\n")
+    for i, tag in enumerate(TAGS):
+        tb.text(" " if i else "").tag(f"#{tag}", tag)
+    return tb
 
 
 def login(retries=4):
@@ -133,7 +142,7 @@ def main():
         print(f"day: {b.day_text(day, year=True)} ({len(es)} places)")
         print(f"card {card_size[0]}x{card_size[1]}, {len(card_data):,} bytes; "
               f"map {map_size[0]}x{map_size[1]}, {len(map_data):,} bytes")
-        print(f"post: {K.post_text(day, es)}\nreply: {MAP_REPLY_TEXT}")
+        print(f"post: {card_text(day, es).build_text()}\nreply: {MAP_REPLY_TEXT}")
         if args.dry_run:
             print(f"dry run: images in {out}, nothing posted, state unchanged")
             return
