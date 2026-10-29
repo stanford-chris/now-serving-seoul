@@ -23,7 +23,7 @@ import urllib.parse
 from collections import defaultdict
 
 from nss_common import (BLUESKY_DID, DISTRICTS, GROUPS, HERE, NEIGHBORHOODS, PUBLIC, STATE,
-                        district_count, display_name, lookup_address)
+                        district_count, display_name, lookup_address, type_info)
 
 BRAND = HERE / "brand"
 NAMES = HERE / "data" / "names.json"
@@ -162,7 +162,11 @@ def listed(state, names=None, blogs=None):
         if b.get("delivery_only"):
             continue
         name_en = title_gloss(b.get("english") or e.get("name_en") or names.get(name))
+        # The kind's English is read from TYPES now, not the harvest's stored copy,
+        # so relabelling a type reaches every licence already on record.
+        type_en, group = type_info(e.get("type_ko"), e.get("register"))
         out.append(dict(e, id=mgt, date=d, name=name, name_ko=korean_shown(name, name_en),
+                        type_en=type_en, group=group,
                         name_en=name_en,
                         opened=b.get("opened"), about=b.get("about")))
     # One place, two licences: the register sometimes holds the same name at

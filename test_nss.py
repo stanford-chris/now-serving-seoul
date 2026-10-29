@@ -224,6 +224,12 @@ class Build(unittest.TestCase):
         e = [x for x in B.listed(st, {"부빔": "MODEL"}, {}) if x["id"] == "1"][0]
         self.assertEqual(e["name_en"], "LICENCE")
 
+    def test_kind_label_comes_from_types_not_the_stored_copy(self):
+        st = self.state()
+        st["licences"]["1"].update(type_ko="호프/통닭", type_en="Beer and chicken (hof)", group="bar")
+        e = [x for x in B.listed(st, {}, {}) if x["id"] == "1"][0]
+        self.assertEqual((e["type_en"], e["group"]), ("Beer and chicken", "bar"))
+
     def test_delivery_only_is_not_listed(self):
         ids = {e["id"] for e in B.listed(self.state(), {}, {"1": {"delivery_only": True}})}
         self.assertNotIn("1", ids)
