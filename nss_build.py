@@ -260,7 +260,7 @@ body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 -apple-system,
 BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 .wrap{max-width:860px;margin:0 auto;padding:0 16px}
 
-h1{font:700 2.2rem/1.1 Georgia,"Times New Roman",serif;margin:0 0 8px;letter-spacing:-.01em}
+h1{font:800 2.2rem/1.1 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;margin:0 0 8px;letter-spacing:-.02em}
 h1 a{color:inherit;text-decoration:none}
 .lede{color:var(--muted);margin:0 0 10px;max-width:46em}
 a{color:var(--accent)}
