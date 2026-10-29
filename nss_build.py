@@ -408,7 +408,7 @@ def interest_html():
         f'{f.capitalize()}</label>' for f in ("daily", "weekly", "monthly"))
     return f"""<section class="interest" aria-labelledby="interest-h">
 <h2 id="interest-h">Want this list by email?</h2>
-<p>Now Serving Seoul may add an email digest. Tell us what you would want and it will be
+<p>Now Serving Seoul may add an email digest. Tell us what you would want, and it will be
 counted. The count keeps no email address.</p>
 <form id="interest"><div class="group" role="group" aria-labelledby="interest-d">
 <span class="label" id="interest-d">Districts</span>
