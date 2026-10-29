@@ -289,7 +289,12 @@ li{padding:10px 0;border-bottom:1px solid var(--rule)}
 li h3{font-size:1.05rem;margin:0}
 li .ko{color:var(--muted);font-weight:400;margin-left:6px}
 .about{font-style:italic;margin:2px 0 4px}
-.prose{max-width:40em}.prose h3{font:600 1.05rem Georgia,serif;margin:22px 0 4px}
+.prose{max-width:40em}
+/* About page subheads (29 October 2026, his pick of three mock-ups): sans
+   section head, small accent capitals beneath it. */
+.prose h2{font:700 1.3rem/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
+.prose h3{font:700 .8rem/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:26px 0 6px}
 ul.plain{list-style:disc;padding-left:20px}ul.plain li{border:0;padding:2px 0;margin:0}
 .status.opened{color:var(--cafe);font-weight:700}
 li p{margin:2px 0}
@@ -328,7 +333,7 @@ filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9)}}
 /* The email-interest box (29 October 2026): a counter, not a sign-up. */
 .interest{margin:32px 0 8px;padding:16px 18px;border:1px solid var(--rule);border-radius:10px;
 background:var(--card)}
-.interest h2{font:600 1.15rem/1.3 Georgia,serif;margin:0 0 4px}
+.interest h2{font:700 1.15rem/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;margin:0 0 4px}
 .interest p{margin:0 0 10px}
 .interest .group{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:0 0 10px}
 .interest .label{color:var(--muted);flex-basis:100%;font-size:.9rem}
