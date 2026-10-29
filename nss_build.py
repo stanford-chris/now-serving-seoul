@@ -143,15 +143,34 @@ def korean_shown(name, en):
     return name
 
 
-def listed(state, names=None, blogs=None):
+def address_of(e):
+    return lookup_address(e.get("road")) or e.get("lot")
+
+
+def replaced(e, open_at):
+    """A closed licence with another, still-open licence at the same address
+    issued the same day or later: a change of owner or company name, not a
+    closure. Measured 29 October 2026: 42 of 81 closed licences were this."""
+    return any(day >= e["licensed"] for day in open_at.get(address_of(e), ()))
+
+
+def listed(state, names=None, blogs=None, closed=False):
     """Every place shown, newest first. English name, in order of preference:
     a blog post's (nss_blogs.py), the licence's own bracketed English, the
-    model's (nss_names.py)."""
+    model's (nss_names.py). closed=True keeps licences the register now shows
+    closed (the site, his call of 29 October 2026), except replaced() ones;
+    the card and the post leave them out."""
     names = load(NAMES) if names is None else names
     blogs = load(BLOGS) if blogs is None else blogs
+    open_at = defaultdict(list)
+    for e in state["licences"].values():
+        if e.get("status") != "closed" and e.get("licensed"):
+            open_at[address_of(e)].append(e["licensed"])
     out = []
     for mgt, e in state["licences"].items():
-        if e.get("excluded") or e.get("status") == "closed":
+        if e.get("excluded"):
+            continue
+        if e.get("status") == "closed" and (not closed or replaced(e, open_at)):
             continue
         try:
             d = dt.date.fromisoformat(e["licensed"])
@@ -198,7 +217,17 @@ def entry_html(e):
     else:
         title = f'<span lang="ko">{esc(e["name"])}</span>'
     opened = e.get("opened")
-    if opened:
+    shut = e.get("status") == "closed"
+    if shut:
+        # "by": when the register gives no closing date, the harvest records the
+        # day it first saw the licence closed, so the date is a latest bound.
+        when = e.get("closed", "")[:10]
+        try:
+            when = f" by {day_text(dt.date.fromisoformat(when), weekday=False)}"
+        except ValueError:
+            when = ""
+        status = f'<span class="status closed">Closed{when}</span>'
+    elif opened:
         posted = dt.date.fromisoformat(opened["posted"])
         status = (f'<span class="status opened">Opened</span> '
                   f'<a class="status" href="{esc(opened["url"])}">blog post, '
@@ -206,7 +235,7 @@ def entry_html(e):
     else:
         status = '<span class="status">Newly licensed</span>'
     about = f'<p class="about">{esc(e["about"])}</p>' if e.get("about") else ""
-    return (f'<li class="{e["group"]}" data-district="{e["district"]}" data-group="{e["group"]}" '
+    return (f'<li class="{e["group"]}{" is-closed" if shut else ""}" data-district="{e["district"]}" data-group="{e["group"]}" '
             f'data-date="{e["date"].isoformat()}" data-type="{esc(e["type_en"])}">'
             f'<h3>{title}</h3>{about}'
             f'<p class="meta"><span class="chip {e["group"]}">{esc(e["type_en"])}</span>'
@@ -248,7 +277,8 @@ def filters_html(entries):
 def points(entries):
     return [{"n": e["name_ko"], "e": e.get("name_en") or "", "t": e["type_en"],
              "g": e["group"], "d": e["district"], "y": e["lat"], "x": e["lon"],
-             "k": kakao_link(e)} for e in entries if "lat" in e]
+             "k": kakao_link(e)} for e in entries
+            if "lat" in e and e.get("status") != "closed"]   # no dot for a closed place
 
 
 CSS = """
@@ -303,6 +333,8 @@ li .ko{color:var(--muted);font-weight:400;margin-left:6px}
 text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:26px 0 6px}
 ul.plain{list-style:disc;padding-left:20px}ul.plain li{border:0;padding:2px 0;margin:0}
 .status.opened{color:var(--cafe);font-weight:700}
+.status.closed{font-weight:700}
+li.is-closed h3{color:var(--muted)}
 li p{margin:2px 0}
 .meta{font-size:.92rem}
 .addr{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}
@@ -510,7 +542,9 @@ exclusions below.</p>
 not proof that a place is serving: some open weeks later, and a few never do. Once a week,
 each place licensed in the last six weeks is looked up on Naver’s blogs. When a post shows
 the place open, at the same address, it is marked <strong>opened</strong> with a link to
-that post and a one-line description. The post itself is never copied.</p>
+that post and a one-line description. The post itself is never copied.
+A place whose license the register shows closed stays on the list, marked
+<strong>closed</strong>, unless a new license has been issued at the same address.</p>
 <h3>Names</h3>
 <p>Where the license gives a name in English, the site uses it. Otherwise the English name
 is written by an A.I. model (Anthropic’s Claude): a Korean spelling of an English word
@@ -551,7 +585,7 @@ def main():
         state = json.loads(STATE.read_text())
     except FileNotFoundError:
         sys.exit("no data/licences.json: run nss_harvest.py first")
-    entries = listed(state)
+    entries = listed(state, closed=True)
     if not entries:
         sys.exit("refusing to build: no listed licences (a failed harvest, not a quiet city)")
     newest = entries[0]["date"]

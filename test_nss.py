@@ -240,6 +240,33 @@ class Build(unittest.TestCase):
         e = [x for x in B.listed(st, {}, {}) if x["id"] == "1"][0]
         self.assertEqual((e["type_en"], e["group"]), ("Beer and chicken", "bar"))
 
+    def closures(self):
+        st = self.state()
+        lic = st["licences"]
+        lic["1"].update(status="closed", closed="2026-10-18",      # nothing else there
+                        road="서울특별시 중구 을지로 99 (을지로3가)")
+        lic["3"].update(status="closed", closed="2026-10-12",      # replaced: same address,
+                        road="서울특별시 마포구 독막로 1 (상수동)")   # a later open licence
+        lic["9"] = dict(lic["3"], status="licensed", name="새집", licensed="2026-10-05")
+        lic["9"].pop("closed")
+        return st
+
+    def test_closures_only_on_the_site(self):
+        st = self.closures()
+        self.assertNotIn("1", {e["id"] for e in B.listed(st, {}, {})})
+        ids = {e["id"] for e in B.listed(st, {}, {}, closed=True)}
+        self.assertIn("1", ids)
+        self.assertNotIn("3", ids, "a replaced licence is a re-licensing, not a closure")
+        self.assertIn("9", ids)
+
+    def test_closed_tag_and_no_map_dot(self):
+        e = [x for x in B.listed(self.closures(), {}, {}, closed=True) if x["id"] == "1"][0]
+        h = B.entry_html(e)
+        self.assertIn("Closed by Oct. 18", h)
+        self.assertIn("is-closed", h)
+        self.assertNotIn("Newly licensed", h)
+        self.assertEqual(B.points([e]), [])
+
     def test_delivery_only_is_not_listed(self):
         ids = {e["id"] for e in B.listed(self.state(), {}, {"1": {"delivery_only": True}})}
         self.assertNotIn("1", ids)
