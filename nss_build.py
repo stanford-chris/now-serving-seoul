@@ -502,8 +502,9 @@ data. The site reads the registers every day, so a new place usually appears her
 few days of its license, often before anyone has written about it.</p>
 <h3>Where</h3>
 <ul class="plain">{districts}</ul>
-<p>In the month ending Oct. 8, 2026, these districts accounted for 531 of the 1,191 places
-that were licensed across all 25 of Seoul’s districts, after the exclusions below.</p>
+<p>In the month ending Oct. 8, 2026, these districts accounted for 446 of the 991 places
+that were licensed across all 25 of Seoul’s districts and still open on Oct. 29, after the
+exclusions below.</p>
 <h3>Newly licensed, or opened?</h3>
 <p>Every place starts as <strong>newly licensed</strong>. A license is permission to serve,
 not proof that a place is serving: some open weeks later, and a few never do. Once a week,
