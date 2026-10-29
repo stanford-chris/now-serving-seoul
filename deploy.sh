@@ -31,8 +31,15 @@ step "build" "$PY" nss_build.py || { echo "!! build failed: not deploying"; exit
 # that the post links to is up, so a failed deploy posts nothing. A quiet day
 # (no new complete licence date) exits 0; a failed map reply exits 1 with the
 # card already recorded, so tomorrow does not post it again.
+# POSTING=0 holds the post and still deploys the site: his call, 29 October
+# 2026, before the first live post. Set it to 1 to resume.
+POSTING=0
 if step "deploy" /opt/homebrew/bin/npx --yes wrangler@latest deploy; then
-  step "post" "$PY" nss_post.py || true
+  if [ "$POSTING" = 1 ]; then
+    step "post" "$PY" nss_post.py || true
+  else
+    echo "posting held (POSTING=0 in deploy.sh): nothing posted"
+  fi
 else
   echo "!! deploy failed: not posting"
 fi
