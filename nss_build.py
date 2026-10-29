@@ -278,10 +278,12 @@ border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
 vertical-align:baseline}
 .dot.restaurant{background:var(--restaurant)}.dot.bar{background:var(--bar)}
 .dot.cafe{background:var(--cafe)}
-.day h2{font:600 1.15rem/1.3 Georgia,serif;margin:28px 0 8px;padding-bottom:6px;
-border-bottom:1px solid var(--rule)}
-/* The list's date headings: sans and smaller than the serif section heads,
-   his call (29 October 2026): Georgia at 1.15rem outweighed the places. */
+/* Section heads in sans, like the title and the About page (no Georgia left on
+   the site since 29 October 2026, his call). */
+.day h2{font:700 1.3rem/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+margin:28px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+/* The list's date headings: smaller than the section heads, his call
+   (29 October 2026): a heavier head outweighed the places. */
 .day h2.date{font:600 1rem/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif}
 .count{color:var(--muted);font:400 .9rem system-ui,sans-serif;margin-left:6px}
 ul{list-style:none;margin:0;padding:0}
