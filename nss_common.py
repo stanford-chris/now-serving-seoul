@@ -83,7 +83,7 @@ TYPES = {
     "통닭(치킨)": ("Fried chicken", "restaurant"),
     "복어취급": ("Pufferfish", "restaurant"),
     "횟집": ("Raw fish (hoe)", "restaurant"),
-    "호프/통닭": ("Beer and chicken (hof)", "bar"),
+    "호프/통닭": ("Beer and chicken", "bar"),
     "정종/대포집/소주방": ("Soju bar", "bar"),
     "감성주점": ("Bar", "bar"),
     "라이브카페": ("Live music bar", "bar"),
