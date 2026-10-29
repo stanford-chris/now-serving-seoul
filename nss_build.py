@@ -335,6 +335,11 @@ background:var(--card)}
 .interest button{font:inherit;font-weight:600;padding:6px 14px;border-radius:6px;border:0;
 background:var(--accent);color:#fff;cursor:pointer}
 .interest .msg{margin:8px 0 0;color:var(--muted)}
+.interest .notify{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--rule);
+display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.interest .notify .label{margin-bottom:2px}
+.interest input[type=email]{font:inherit;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;
+background:var(--bg,transparent);color:inherit;flex:1 1 220px;min-width:0}
 """
 
 SCRIPT = """
@@ -378,6 +383,12 @@ window.addEventListener('load',apply);
 """
 
 
+# The launch waitlist (29 October 2026, his call): Buttondown's free plan, its
+# hosted embed form, email only. Districts and frequency stay with the counter,
+# since Buttondown's tags are a paid add-on.
+BUTTONDOWN = "nowservingseoul"
+
+
 def interest_html():
     """The email-interest counter (29 October 2026, his call): which districts and
     how often a reader would want the list by email. It asks for no address and
@@ -391,14 +402,20 @@ def interest_html():
     return f"""<section class="interest" aria-labelledby="interest-h">
 <h2 id="interest-h">Want this list by email?</h2>
 <p>Now Serving Seoul may add an email digest. Tell us what you would want and it will be
-counted. No email address is asked for or kept.</p>
+counted. The count keeps no email address.</p>
 <form id="interest"><div class="group" role="group" aria-labelledby="interest-d">
 <span class="label" id="interest-d">Districts</span>
 <label><input type="checkbox" name="d" value="ALL"> All {district_count()}</label>{districts}</div>
 <div class="group" role="radiogroup" aria-labelledby="interest-f">
 <span class="label" id="interest-f">How often</span>{freqs}</div>
 <button type="submit">Count me in</button></form>
-<p class="msg" aria-live="polite"></p></section>"""
+<p class="msg" aria-live="polite"></p>
+<form class="notify" method="post" target="_blank"
+ action="https://buttondown.com/api/emails/embed-subscribe/{BUTTONDOWN}">
+<label class="label" for="notify-email">To hear when it launches, leave your email address.
+It is kept by Buttondown, the newsletter service.</label>
+<input type="email" name="email" id="notify-email" required autocomplete="email"
+ placeholder="you@example.com"> <button type="submit">Notify me</button></form></section>"""
 
 
 INTEREST_SCRIPT = """

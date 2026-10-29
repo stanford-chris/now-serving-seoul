@@ -366,10 +366,18 @@ class InterestBox(unittest.TestCase):
             self.assertIn(f'value="{k}"', h)
         self.assertIn('value="ALL"', h)
 
-    def test_asks_for_no_email(self):
+    def test_counter_asks_for_no_email(self):
+        # The address goes only to Buttondown's form, never to the counter's.
         h = B.interest_html()
-        self.assertNotIn('type="email"', h)
-        self.assertIn("No email address is asked for or kept", h)
+        counter = h[h.index('<form id="interest"'):h.index("</form>")]
+        self.assertNotIn('type="email"', counter)
+        self.assertIn("The count keeps no email address", h)
+
+    def test_waitlist_posts_to_buttondown(self):
+        h = B.interest_html()
+        self.assertIn('action="https://buttondown.com/api/emails/embed-subscribe/nowservingseoul"', h)
+        self.assertIn('name="email"', h)
+        self.assertIn("kept by Buttondown", h)
 
     def test_weekly_is_the_default(self):
         self.assertIn('value="weekly" checked', B.interest_html())
