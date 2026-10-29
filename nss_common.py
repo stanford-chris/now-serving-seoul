@@ -117,6 +117,13 @@ FOOD_HALL_ADDRESS = re.compile(r"백화점|식품관|면세점|아울렛")
 SHARED_KITCHEN = re.compile(r"주방\s*\d+\s*호|공유주방")
 DELIVERY_NAME = re.compile(r"배달전문|배달 전문|딜리버리|공유주방")
 FOOD_HALL_NAME = re.compile(r"백화점|아울렛|면세점|AK플라자|식품관")
+# A convenience store licensed as 기타 휴게음식점 (seating, or cooking on site)
+# slips past SKIP_TYPES: 13 had, 21 August to 26 October 2026. Caught by the
+# chain's name, his call of 29 October 2026. ⚠️ Anchored to the START of the
+# name: unanchored, "CU" also caught 커비 Cubby, an Indian and Thai restaurant.
+CONVENIENCE_NAME = re.compile(
+    r"^\s*(씨유|CU(?![A-Za-z])|지에스\s*25|GS\s*25|세븐\s*일레븐|7-?eleven|이마트\s*24|emart\s*24|미니스톱|ministop)",
+    re.I)
 
 
 def type_info(type_ko, register):
@@ -131,6 +138,8 @@ def exclusion(row):
     t = (row.get("UPTAENM") or "").strip()
     if t in SKIP_TYPES:
         return f"type {t}"
+    if CONVENIENCE_NAME.search(row.get("BPLCNM") or ""):
+        return "convenience store"
     if POPUP_NAME.search(row.get("BPLCNM") or ""):
         return "temporary or pop-up"
     addr = (row.get("RDNWHLADDR") or "") + " " + (row.get("SITEWHLADDR") or "")

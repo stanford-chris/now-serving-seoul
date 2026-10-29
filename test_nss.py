@@ -46,6 +46,16 @@ class Exclusion(unittest.TestCase):
         self.assertEqual(C.exclusion(row(road="서울특별시 강남구 봉은사로29길 35, 지하2층 주방 24호 (논현동)")),
                          "delivery only")
 
+    def test_convenience_store_by_chain_name(self):
+        # Real names from the register, licensed as 기타 휴게음식점.
+        for n in ("이마트24대치랜드마크점", "CU만리재옛길점", "씨유 논현대승점",
+                  "지에스25  역삼허브", "세븐일레븐 공덕자이점", "GS25종로율곡로점"):
+            self.assertEqual(C.exclusion(row(t="기타 휴게음식점", name=n)), "convenience store", n)
+
+    def test_chain_name_only_at_the_start(self):
+        for n in ("커비 Cubby", "Cucina 쿠치나", "카페 씨유어게인"):
+            self.assertIsNone(C.exclusion(row(name=n)), n)
+
     def test_food_hall_address(self):
         self.assertIsNotNone(C.exclusion(row(
             road="서울특별시 강남구 압구정로 343, 갤러리아백화점 지하1층 (압구정동)")))
