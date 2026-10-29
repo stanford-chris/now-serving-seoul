@@ -139,7 +139,7 @@ def summary(day, es):
 
 
 def headline(n):
-    return f"{n} new place{'' if n == 1 else 's'} licensed"
+    return f"{n} new food license{'' if n == 1 else 's'}"
 
 
 def build_html(day, es):
@@ -168,8 +168,8 @@ border-top:8px solid #c2410c;padding:20px 26px 18px;box-sizing:border-box}}
 .mast{{display:flex;justify-content:space-between;align-items:baseline;
 font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6a645b}}
 .mast b{{color:#c2410c;letter-spacing:.1em}}
-h1{{font:700 34px/1.1 Georgia,"Times New Roman",serif;margin:10px 0 2px;letter-spacing:-.01em}}
-.date{{font:italic 17px Georgia,serif;color:#6a645b;margin:0 0 12px}}
+h1{{font:800 32px/1.1 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;margin:10px 0 4px;letter-spacing:-.02em}}
+.date{{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#c2410c;margin:0 0 12px}}
 .kinds{{display:flex;flex-wrap:wrap;gap:4px 18px;margin:0 0 16px}}
 .dot{{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;flex:none}}
 .dot.restaurant{{background:#c2410c}}.dot.bar{{background:#7c3aed}}.dot.cafe{{background:#0f766e}}
@@ -185,7 +185,7 @@ padding:0 5px;margin-left:7px;flex:none}}
 .wh{{margin-left:auto;padding-left:12px;color:#6a645b;font-size:13px;white-space:nowrap;flex:none}}
 .more{{margin:8px 0 0;font-size:13px;color:#6a645b}}.more b{{color:#c2410c;font-weight:600}}
 </style></head><body><div class="card">
-<div class="mast"><b>Now Serving Seoul</b><span>Seoul’s new food licenses</span></div>
+<div class="mast"><b>Now Serving Seoul</b></div>
 <h1>{headline(len(es))}</h1>
 <p class="date">{b.day_text(day)}</p>
 <div class="kinds">{kind_html}</div>

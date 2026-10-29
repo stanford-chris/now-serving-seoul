@@ -330,7 +330,7 @@ class Card(unittest.TestCase):
         es = [place(f"식당{i}", f"R{i}") for i in range(12)]
         alt = K.alt_text(dt.date(2026, 10, 26), es)
         self.assertTrue(all(f"R{i} (식당{i})" in alt for i in range(12)))
-        self.assertIn("12 new places licensed on Monday, Oct. 26", alt)
+        self.assertIn("12 new food licenses on Monday, Oct. 26", alt)
 
     def test_map_keeps_every_place_of_the_day_in_frame(self):
         backdrop = [{"lon": 126.95 + i / 1000, "lat": 37.52 + i / 2000} for i in range(200)]
@@ -353,7 +353,7 @@ class Card(unittest.TestCase):
         self.assertRegex(C.BLUESKY_DID, r"^did:plc:[a-z2-7]{24}$")
 
     def test_headline_singular(self):
-        self.assertEqual(K.headline(1), "1 new place licensed")
+        self.assertEqual(K.headline(1), "1 new food license")
 
 
 if __name__ == "__main__":
