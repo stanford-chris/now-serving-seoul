@@ -2,9 +2,16 @@
   // Now Serving Seoul: Cloudflare Workers static assets, the same shape as
   // seoul-transit-art/wrangler.jsonc. Deployed by deploy.sh.
   // workers_dev and preview_urls off: the site lives at one hostname only.
+  // Since 29 October 2026 a small Worker answers /api/* (the email-interest
+  // counter, src/worker.js); every other path is the static assets as before.
   "name": "now-serving-seoul",
   "compatibility_date": "2026-06-01",
-  "assets": { "directory": "./public" },
+  "main": "src/worker.js",
+  "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
+  "kv_namespaces": [
+    // One key per interest vote, choices in its metadata; nothing about the visitor.
+    { "binding": "INTEREST", "id": "f0580df6def0477ca4f18d8fa8cefa2c" }
+  ],
   "workers_dev": false,
   "preview_urls": false,
   "routes": [

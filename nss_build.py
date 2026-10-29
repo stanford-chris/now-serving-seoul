@@ -325,6 +325,16 @@ background:color-mix(in srgb,var(--fg) 8%,transparent)}
 filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9)}}
 :root[data-theme="dark"] .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.95) contrast(.9)}
 @media (max-width:600px){h1{font-size:1.8rem}#map{height:320px}}
+/* The email-interest box (29 October 2026): a counter, not a sign-up. */
+.interest{margin:32px 0 8px;padding:16px 18px;border:1px solid var(--rule);border-radius:10px;
+background:var(--card)}
+.interest h2{font:600 1.15rem/1.3 Georgia,serif;margin:0 0 4px}
+.interest p{margin:0 0 10px}
+.interest .group{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:0 0 10px}
+.interest .label{color:var(--muted);flex-basis:100%;font-size:.9rem}
+.interest button{font:inherit;font-weight:600;padding:6px 14px;border-radius:6px;border:0;
+background:var(--accent);color:#fff;cursor:pointer}
+.interest .msg{margin:8px 0 0;color:var(--muted)}
 """
 
 SCRIPT = """
@@ -368,7 +378,53 @@ window.addEventListener('load',apply);
 """
 
 
-def page(title, lede, body, entries, path, with_map=True, with_filters=True):
+def interest_html():
+    """The email-interest counter (29 October 2026, his call): which districts and
+    how often a reader would want the list by email. It asks for no address and
+    the Worker stores none (src/worker.js); a browser that has voted sees thanks."""
+    districts = "".join(
+        f'<label><input type="checkbox" name="d" value="{k}"> {v[0]}</label>'
+        for k, v in sorted(DISTRICTS.items(), key=lambda kv: kv[1][0]))
+    freqs = "".join(
+        f'<label><input type="radio" name="f" value="{f}"{" checked" if f == "weekly" else ""}> '
+        f'{f.capitalize()}</label>' for f in ("daily", "weekly", "monthly"))
+    return f"""<section class="interest" aria-labelledby="interest-h">
+<h2 id="interest-h">Want this list by email?</h2>
+<p>Now Serving Seoul may add an email digest. Tell us what you would want and it will be
+counted. No email address is asked for or kept.</p>
+<form id="interest"><div class="group" role="group" aria-labelledby="interest-d">
+<span class="label" id="interest-d">Districts</span>
+<label><input type="checkbox" name="d" value="ALL"> All {district_count()}</label>{districts}</div>
+<div class="group" role="radiogroup" aria-labelledby="interest-f">
+<span class="label" id="interest-f">How often</span>{freqs}</div>
+<button type="submit">Count me in</button></form>
+<p class="msg" aria-live="polite"></p></section>"""
+
+
+INTEREST_SCRIPT = """
+(function(){
+var box=document.querySelector('.interest');if(!box)return;
+var form=box.querySelector('form'),msg=box.querySelector('.msg'),KEY='nss-interest';
+function done(t){form.hidden=true;msg.textContent=t}
+try{if(localStorage.getItem(KEY)){done('Thanks: your interest is already counted.');return}}catch(e){}
+var all=form.querySelector('input[value=ALL]');
+all.addEventListener('change',function(){
+ form.querySelectorAll('input[name=d]').forEach(function(c){if(c!==all){c.disabled=all.checked;if(all.checked)c.checked=false}})});
+form.addEventListener('submit',function(ev){
+ ev.preventDefault();
+ var d=all.checked?['ALL']:Array.prototype.map.call(form.querySelectorAll('input[name=d]:checked'),function(c){return c.value});
+ if(!d.length){msg.textContent='Pick at least one district.';return}
+ var f=form.querySelector('input[name=f]:checked').value;
+ msg.textContent='Sending…';
+ fetch('/api/interest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({districts:d,freq:f})})
+ .then(function(r){if(!r.ok)throw r;try{localStorage.setItem(KEY,'1')}catch(e){}done('Thanks: counted.')})
+ .catch(function(){msg.textContent='That did not go through. Please try again later.'});
+});
+})();
+"""
+
+
+def page(title, lede, body, entries, path, with_map=True, with_filters=True, interest=False):
     canonical = SITE + path
     paras = lede if isinstance(lede, list) else [lede]
     lede = " ".join(paras)
@@ -395,12 +451,12 @@ def page(title, lede, body, entries, path, with_map=True, with_filters=True):
 <div><h1><a href="/">Now Serving Seoul</a></h1>{lede_html}
 <nav class="top"><a href="/">Latest</a><a href="/weeks/">Every week</a><a href="/about/">About</a></nav></div>
 </div></header><div class="wrap">
-<main>{filters_html(entries) if with_filters else ""}{map_div}{body}</main>
+<main>{filters_html(entries) if with_filters else ""}{map_div}{body}{interest_html() if interest else ""}</main>
 <footer><p>Data: Seoul Metropolitan Government
 (<a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>), Kakao, OpenStreetMap.
 <a href="/about/">About</a> · Made by <a href="https://chris-stanford.com/">Chris Stanford</a></p></footer></div>
 <script type="application/json" id="points">{pts}</script>
-{"<script>" + SCRIPT + "</script>" if with_filters else ""}</body></html>
+{"<script>" + SCRIPT + "</script>" if with_filters else ""}{"<script>" + INTEREST_SCRIPT + "</script>" if interest else ""}</body></html>
 """
 
 
@@ -453,7 +509,7 @@ and its café counterpart, under KOGL Type 1. Locations from Kakao’s address s
 tiles © OpenStreetMap contributors. Posts from Naver blogs, linked, never copied.</p>
 </section>"""
     return page("Now Serving Seoul · About", "How the list is made.", body, [], "/about/",
-                with_map=False, with_filters=False)
+                with_map=False, with_filters=False, interest=True)
 
 
 def write(path, text):
@@ -476,7 +532,7 @@ def main():
     recent = [e for e in entries if e["date"] > newest - dt.timedelta(days=RECENT_DAYS)]
     lede = HOME_INTRO
     write(tmp / "index.html", page("Now Serving Seoul", lede,
-                                   list_html(recent), recent, "/"))
+                                   list_html(recent), recent, "/", interest=True))
 
     weeks = defaultdict(list)
     for e in entries:

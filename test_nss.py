@@ -356,5 +356,31 @@ class Card(unittest.TestCase):
         self.assertEqual(K.headline(1), "1 new food license")
 
 
+
+class InterestBox(unittest.TestCase):
+    """The email-interest counter: every district offered, no address field."""
+
+    def test_every_district_and_all(self):
+        h = B.interest_html()
+        for k in C.DISTRICTS:
+            self.assertIn(f'value="{k}"', h)
+        self.assertIn('value="ALL"', h)
+
+    def test_asks_for_no_email(self):
+        h = B.interest_html()
+        self.assertNotIn('type="email"', h)
+        self.assertIn("No email address is asked for or kept", h)
+
+    def test_weekly_is_the_default(self):
+        self.assertIn('value="weekly" checked', B.interest_html())
+
+    def test_only_on_pages_that_ask(self):
+        with_box = B.page("t", "l", "", [], "/x/", with_map=False, with_filters=False, interest=True)
+        without = B.page("t", "l", "", [], "/x/", with_map=False, with_filters=False)
+        self.assertIn('class="interest"', with_box)
+        self.assertIn("/api/interest", with_box)
+        self.assertNotIn('class="interest"', without)
+
+
 if __name__ == "__main__":
     unittest.main()

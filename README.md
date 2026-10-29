@@ -48,3 +48,12 @@ which 61 were marked temporary and 86 sat in a food hall.
 ```bash
 python3 -m unittest test_nss
 ```
+
+## Email interest counter
+
+The home and About pages carry a short box asking which districts, and how often, a reader
+would want the list by email. It is a counter, not a sign-up: no email address is asked for
+or stored. `src/worker.js` answers `/api/*` only and writes one Workers KV key per vote, with
+the choices in the key's metadata; every other path is served from the static build as
+before. The totals are at `/api/interest/totals` behind a bearer token, and the owner's
+morning digest reads them.

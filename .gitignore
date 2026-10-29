@@ -4,3 +4,4 @@ __pycache__/
 .wrangler/
 .DS_Store
 drafts/
+.dev.vars
