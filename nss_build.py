@@ -334,7 +334,7 @@ text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:26px 0 
 ul.plain{list-style:disc;padding-left:20px}ul.plain li{border:0;padding:2px 0;margin:0}
 .status.opened{color:var(--cafe);font-weight:700}
 .status.closed{font-weight:700}
-li.is-closed h3{color:var(--muted)}
+li.is-closed h3{color:var(--muted);opacity:.6}
 li p{margin:2px 0}
 .meta{font-size:.92rem}
 .addr{font-size:.85rem;color:var(--muted);overflow-wrap:anywhere}
