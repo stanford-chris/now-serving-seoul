@@ -391,5 +391,18 @@ class InterestBox(unittest.TestCase):
         self.assertNotIn('class="interest"', without)
 
 
+class RegisterPoint(unittest.TestCase):
+    """The register's EPSG:5174 X and Y, against Kakao's pin for the same place
+    (measured 30 October 2026, before Kakao was dropped)."""
+    def test_a_known_place_lands_within_ten_metres(self):
+        lat, lon = C.register_point("198814.210284072  ", "453016.584496483")
+        self.assertLess(abs(lat - 37.5794819) * 111000, 10)
+        self.assertLess(abs(lon - 126.9873633) * 88000, 10)
+
+    def test_blank_or_junk_is_no_point(self):
+        for x, y in (("", "453016.5"), ("   ", "  "), ("abc", "1"), ("0", "0")):
+            self.assertIsNone(C.register_point(x, y))
+
+
 if __name__ == "__main__":
     unittest.main()

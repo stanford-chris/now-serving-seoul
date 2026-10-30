@@ -501,7 +501,7 @@ def page(title, lede, body, entries, path, with_map=True, with_filters=True, int
 </div></header><div class="wrap">
 <main>{filters_html(entries) if with_filters else ""}{map_div}{body}{interest_html() if interest else ""}</main>
 <footer><p>Data: Seoul Metropolitan Government
-(<a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>), Kakao, OpenStreetMap.
+(<a href="https://www.kogl.or.kr/info/licenseType1.do">KOGL Type 1</a>), OpenStreetMap.
 <a href="/about/">About</a> · Made by <a href="https://chris-stanford.com/">Chris Stanford</a></p></footer></div>
 <script type="application/json" id="points">{pts}</script>
 {"<script>" + SCRIPT + "</script>" if with_filters else ""}{"<script>" + INTEREST_SCRIPT + "</script>" if interest else ""}</body></html>
@@ -540,18 +540,13 @@ ordinary Korean words. The Korean name from the license is always shown beside t
 and department stores; licenses marked temporary, which are almost all food-hall pop-ups;
 anything at a department-store or food-hall address; and a second license for a place
 already listed at the same address.</p>
-<h3>On Bluesky</h3>
-<p><a href="https://bsky.app/profile/nowservingseoul.com">@nowservingseoul.com</a> posts each
-day’s licenses as a card, with a map of where they are in a reply. The card names five of the
-day’s places: independents ahead of chain branches, spread
-across kinds and districts. It is a sample, not a recommendation.</p>
 <h3>How current</h3>
 <p>The register runs a couple of days behind. The newest license on record is dated
 {newest}; the site was last updated {esc(stamp_text(state.get("updated")))} (Seoul time).</p>
 <h3>Sources</h3>
 <p>License data: Seoul Metropolitan Government,
 <a href="https://data.seoul.go.kr/dataList/OA-16094/S/1/datasetView.do">서울시 일반음식점 인허가 정보</a>
-and its café counterpart, under KOGL Type 1. Locations from Kakao’s address search. Map
+and its café counterpart, under KOGL Type 1, including each place’s location. Map
 tiles © OpenStreetMap contributors.</p>
 </section>"""
     return page("Now Serving Seoul · About", "How the list is made.", body, [], "/about/",

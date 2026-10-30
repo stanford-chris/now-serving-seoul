@@ -6,6 +6,7 @@ commercial use and changes allowed). Two registers per district:
 일반음식점 (072404, restaurants and most bars) and 휴게음식점 (072405, cafés,
 bakeries, snack counters).
 """
+import math
 import re
 from pathlib import Path
 
@@ -17,12 +18,9 @@ STATE = DATA / "licences.json"
 # which is what proves the handle @nowservingseoul.com (his choice over a DNS
 # record, 29 October 2026); nss_post.py signs in with it.
 BLUESKY_DID = "did:plc:gnx7l3efyksa767sxgxhxlfn"
-GEOCODE_CACHE = DATA / "geocode.json"
 
 API = "http://openapi.seoul.go.kr:8088/{key}/json/{svc}/{a}/{b}/"
 KEYCHAIN = ("seoul-open-data", "openapi.seoul.go.kr")    # service, account
-KAKAO_KEYCHAIN = ("kakao-rest-api-key", "kakao-local")   # service, account
-KAKAO_ADDRESS = "https://dapi.kakao.com/v2/local/search/address.json"
 
 # ⚠️ The suffix is NOT always the obvious one: `_JR` is Jungnang-gu (중랑구),
 # not Jongno; Jongno is `_JN`. Found 10 October 2026, when every one of
@@ -185,7 +183,7 @@ def neighborhood(road, lot):
 
 
 def lookup_address(road):
-    """The part of a road address Kakao can find: up to the first comma,
+    """A road address up to the first comma,
     without the bracketed 동. "서울특별시 마포구 성미산로 161-11, 1층 (연남동)"
     -> "서울특별시 마포구 성미산로 161-11"."""
     a = re.sub(r"\s*\([^)]*\)\s*$", "", road or "")
@@ -199,3 +197,70 @@ def display_name(name):
     """The name without the company-form words a licence often carries:
     "주식회사 안목서초" -> "안목서초", "유동부치아바타(주)" -> "유동부치아바타"."""
     return CORPORATE.sub("", name or "").strip() or (name or "")
+
+
+# ── The register's own coordinates ───────────────────────────────────────────
+# Each register row carries X and Y in EPSG:5174 (Korean 1985, Bessel 1841,
+# Transverse Mercator, central meridian 127°0'10.405", origin 38°N, false
+# easting 200,000, false northing 500,000). They replaced Kakao's address search
+# on 30 October 2026, his call: Kakao's staff say Local API results may not be
+# stored in any form, only called live. Checked that day against Kakao's own
+# pins for 226 places: median 2.8 m apart, 215 within 100 m, 3 over 200 m.
+# The datum shift is EPSG:5174's published TOWGS84 (position vector).
+_BESSEL_A, _BESSEL_F = 6377397.155, 1 / 299.1528128
+_LON0, _LAT0, _FE, _FN = 127.0028902777778, 38.0, 200000.0, 500000.0
+_TOWGS84 = (-115.80, 474.99, 674.11, 1.16, -2.31, -1.63, 6.43)
+
+
+def register_point(x, y):
+    """(lat, lon) in WGS84 from a register row's X and Y, or None when either
+    is blank or not a number."""
+    try:
+        x, y = float(str(x).strip()), float(str(y).strip())
+    except ValueError:
+        return None
+    if not x or not y:
+        return None
+    a, f = _BESSEL_A, _BESSEL_F
+    e2 = f * (2 - f)
+    ep2 = e2 / (1 - e2)
+
+    def meridian(phi):
+        return a * ((1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256) * phi
+                    - (3 * e2 / 8 + 3 * e2 ** 2 / 32 + 45 * e2 ** 3 / 1024) * math.sin(2 * phi)
+                    + (15 * e2 ** 2 / 256 + 45 * e2 ** 3 / 1024) * math.sin(4 * phi)
+                    - (35 * e2 ** 3 / 3072) * math.sin(6 * phi))
+
+    m = meridian(math.radians(_LAT0)) + (y - _FN)
+    mu = m / (a * (1 - e2 / 4 - 3 * e2 ** 2 / 64 - 5 * e2 ** 3 / 256))
+    e1 = (1 - math.sqrt(1 - e2)) / (1 + math.sqrt(1 - e2))
+    p1 = (mu + (3 * e1 / 2 - 27 * e1 ** 3 / 32) * math.sin(2 * mu)
+          + (21 * e1 ** 2 / 16 - 55 * e1 ** 4 / 32) * math.sin(4 * mu)
+          + (151 * e1 ** 3 / 96) * math.sin(6 * mu) + (1097 * e1 ** 4 / 512) * math.sin(8 * mu))
+    c1, t1 = ep2 * math.cos(p1) ** 2, math.tan(p1) ** 2
+    n1 = a / math.sqrt(1 - e2 * math.sin(p1) ** 2)
+    r1 = a * (1 - e2) / (1 - e2 * math.sin(p1) ** 2) ** 1.5
+    d = (x - _FE) / n1
+    lat = p1 - (n1 * math.tan(p1) / r1) * (
+        d ** 2 / 2 - (5 + 3 * t1 + 10 * c1 - 4 * c1 ** 2 - 9 * ep2) * d ** 4 / 24
+        + (61 + 90 * t1 + 298 * c1 + 45 * t1 ** 2 - 252 * ep2 - 3 * c1 ** 2) * d ** 6 / 720)
+    lon = math.radians(_LON0) + (d - (1 + 2 * t1 + c1) * d ** 3 / 6
+                                 + (5 - 2 * c1 + 28 * t1 - 3 * c1 ** 2 + 8 * ep2 + 24 * t1 ** 2)
+                                 * d ** 5 / 120) / math.cos(p1)
+    # Bessel geodetic -> ECEF -> Helmert -> WGS84 geodetic
+    n = a / math.sqrt(1 - e2 * math.sin(lat) ** 2)
+    X = n * math.cos(lat) * math.cos(lon)
+    Y = n * math.cos(lat) * math.sin(lon)
+    Z = n * (1 - e2) * math.sin(lat)
+    tx, ty, tz, rx, ry, rz, s = _TOWGS84
+    rx, ry, rz = (math.radians(v / 3600) for v in (rx, ry, rz))
+    s = 1 + s * 1e-6
+    X, Y, Z = (tx + s * (X - rz * Y + ry * Z), ty + s * (rz * X + Y - rx * Z),
+               tz + s * (-ry * X + rx * Y + Z))
+    A, F = 6378137.0, 1 / 298.257223563
+    E2 = F * (2 - F)
+    p = math.hypot(X, Y)
+    phi = math.atan2(Z, p * (1 - E2))
+    for _ in range(6):
+        phi = math.atan2(Z + E2 * A / math.sqrt(1 - E2 * math.sin(phi) ** 2) * math.sin(phi), p)
+    return round(math.degrees(phi), 7), round(math.degrees(math.atan2(Y, X)), 7)

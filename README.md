@@ -10,7 +10,7 @@ Seoul’s food-license register.
 
 | Step | Script | What it does |
 | --- | --- | --- |
-| Harvest | `nss_harvest.py` | Reads 16 registers (two per district), keeps every new operating license by its management number, marks closures, pins each place with Kakao’s address search |
+| Harvest | `nss_harvest.py` | Reads 16 registers (two per district), keeps every new operating license by its management number, marks closures, pins each place from the register’s own coordinates (EPSG:5174) |
 | Build | `nss_build.py` | Writes `public/`: the last 14 days with a map and filters, one page per week, an index of weeks, an about page |
 | Deploy | `deploy.sh` | Harvest, build, `wrangler deploy` to the Worker `now-serving-seoul` |
 
@@ -44,7 +44,8 @@ which 61 were marked temporary and 86 sat in a food hall.
 
 - License data: Seoul Metropolitan Government, data.seoul.go.kr
   (서울시 일반음식점 인허가 정보 and 휴게음식점 인허가 정보), KOGL Type 1.
-- Locations: Kakao Local address search.
+- Locations: the register’s own X and Y. Kakao’s address search was used until
+  30 October 2026 and dropped: Kakao forbids storing its Local API results.
 - Map: Leaflet, tiles © OpenStreetMap contributors.
 
 ## Tests

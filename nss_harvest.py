@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Read the seven districts' food-licence registers and update data/licences.json.
 
-    python3 nss_harvest.py              # read, update, geocode new places
+    python3 nss_harvest.py              # read and update
     python3 nss_harvest.py --dry-run    # read and report, write nothing
 
 Each licence is kept by its management number (MGTNO) from the day it is first
-seen, with what the register said, why it is or is not listed, and where Kakao
-places its road address. A licence that later closes is marked closed with the
+seen, with what the register said, why it is or is not listed, and where the
+register itself places it (its X and Y, converted by register_point()). Kakao's
+address search did that until 30 October 2026, when it was dropped because
+Kakao forbids storing its results. A licence that later closes is marked closed with the
 register's closing date; nothing is ever deleted.
 
 Exit 0 all read, 1 a lookup or table gap worth a look, 2 a register NOT CHECKED.
@@ -29,20 +31,17 @@ import os
 import subprocess
 import sys
 import time
-import urllib.parse
 from zoneinfo import ZoneInfo
 
-from nss_common import (API, DATA, DISTRICTS, GEOCODE_CACHE, KAKAO_ADDRESS,
-                        KAKAO_KEYCHAIN, KEYCHAIN, REGISTERS, STATE, TYPES,
-                        english_name, exclusion, lookup_address, neighborhood, reexclude,
-                        services, type_info)
+from nss_common import (API, DATA, DISTRICTS, KEYCHAIN, REGISTERS, STATE, TYPES,
+                        english_name, exclusion, neighborhood, reexclude,
+                        register_point, services, type_info)
 
 SEOUL = ZoneInfo("Asia/Seoul")
 FIRST_RUN_DAYS = 70   # how far back an empty state starts the archive
 LATE_DAYS = 60        # a licence can enter the register late; look this far back
 LIST_SHRINK = 0.98    # a list under 98% of its last good total is a bad read
 OTHER_DISTRICT_MAX = 0.01
-KAKAO_SPACING = 0.25
 
 
 def keychain(service, account):
@@ -99,7 +98,14 @@ def record(row, district, register, today):
         "road": road, "lot": lot, "dong": neighborhood(road, lot),
         "excluded": exclusion(row),
         "status": "licensed", "first_seen": today,
+        **place(row),
     }
+
+
+def place(row):
+    """{"lat", "lon"} from the register's own X and Y, or {} when it has none."""
+    pt = register_point(row.get("X", ""), row.get("Y", ""))
+    return {"lat": pt[0], "lon": pt[1]} if pt else {}
 
 
 def check_list(rows, last_total, gu):
@@ -124,6 +130,10 @@ def merge(licences, rows, district, register, today, floor):
         operating = r.get("TRDSTATEGBN") == "01"
         if mgt in licences:
             e = licences[mgt]
+            # The register's position wins on every read, so a corrected X and Y
+            # reaches the map, and no other source's pin survives.
+            e.pop("lat", None), e.pop("lon", None)
+            e.update(place(r))
             if not operating and e["status"] != "closed":
                 e["status"], e["closed"] = "closed", clean(r.get("DCBYMD")) or today
                 closed += 1
@@ -137,47 +147,6 @@ def merge(licences, rows, district, register, today, floor):
         licences[mgt] = e
         added += 1
     return added, closed, unknown
-
-
-def kakao_lookup(query, key):
-    url = KAKAO_ADDRESS + "?" + urllib.parse.urlencode({"query": query})
-    r = subprocess.run(["curl", "-s", "-m", "20", "-w", "\n%{http_code}",
-                        "-H", f"Authorization: KakaoAK {key}", url],
-                       capture_output=True, text=True, stdin=subprocess.DEVNULL)
-    body, _, code = r.stdout.rpartition("\n")
-    if r.returncode or code != "200":
-        raise RuntimeError(f"Kakao HTTP {code or r.returncode}: {body[:120]}")
-    docs = json.loads(body).get("documents")
-    if docs is None:
-        raise RuntimeError("Kakao reply carried no documents")
-    return docs
-
-
-def geocode(entries, cache, key, log):
-    """Pin every listed licence still lacking one. A query that answered with
-    nothing is cached as a fact about the address; one that could not be made
-    is not cached and is retried next run."""
-    failures = 0
-    for e in entries:
-        if e.get("excluded") or "lat" in e:
-            continue
-        for q in (lookup_address(e["road"]), e["lot"]):
-            if not q:
-                continue
-            if q not in cache:
-                try:
-                    docs = kakao_lookup(q, key)
-                except (RuntimeError, ValueError, subprocess.SubprocessError) as ex:
-                    log(f"  geocode not made for {q}: {ex}")
-                    failures += 1
-                    break
-                cache[q] = ([float(docs[0]["y"]), float(docs[0]["x"])]
-                            if docs else None)
-                time.sleep(KAKAO_SPACING)
-            if cache[q]:
-                e["lat"], e["lon"] = cache[q]
-                break
-    return failures
 
 
 def write_json(path, obj):
@@ -239,21 +208,10 @@ def main(argv):
         log(f"types not in the table (kept in Korean): {sorted(unknown_types)}")
         rc = 1
     if dry:
-        log("dry run: nothing written, nothing geocoded")
+        log("dry run: nothing written")
     else:
-        kkey = keychain(*KAKAO_KEYCHAIN)
-        try:
-            cache = json.loads(GEOCODE_CACHE.read_text())
-        except FileNotFoundError:
-            cache = {}
-        if not kkey:
-            log("geocode NOT CHECKED: no Kakao key in the Keychain")
-            rc = max(rc, 1)
-        elif geocode(listed, cache, kkey, log):
-            rc = max(rc, 1)
         unpinned = sum("lat" not in e for e in listed)
-        log(f"pinned {len(listed) - unpinned} of {len(listed)}")
-        write_json(GEOCODE_CACHE, cache)
+        log(f"pinned {len(listed) - unpinned} of {len(listed)} from the register's own X and Y")
         state["updated"] = dt.datetime.now(SEOUL).isoformat(timespec="minutes")
         state["newest_licence"] = max((e["licensed"] for e in licences.values()), default=None)
         write_json(STATE, state)
