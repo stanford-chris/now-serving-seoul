@@ -349,7 +349,7 @@ font-size:.88rem}
 .mark img{display:block;border-radius:50%;width:64px;height:64px}
 .band h1{margin:0 0 4px}
 nav.top{display:flex;gap:16px;margin:10px 0 0}
-nav.top a{font-weight:600;text-decoration:none}
+nav.top a{font-weight:600;text-decoration:none;display:inline-block;padding:11px 4px;margin:-11px -4px}
 nav.top a:hover{text-decoration:underline}
 .filters{position:sticky;top:0;z-index:1000;background:var(--bg)}
 li{padding:12px 0 12px 14px;border-left:4px solid var(--rule);margin:8px 0;border-bottom:0}
