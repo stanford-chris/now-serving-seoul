@@ -9,8 +9,10 @@ Pages:
   /week/YYYY-MM-DD/       one week (Monday to Sunday) by licence date
 
 The list is in the HTML itself, so the page reads without JavaScript; the
-filters and the map are added on top. A licence is "newly licensed" until the
-weekly pass finds a post saying the place has opened.
+filters and the map are added on top. Every licence is "newly licensed": the
+weekly Naver blog pass that could mark one "opened" was retired 30 October
+2026, his call, because Naver's terms forbid automated searching and collecting
+of posts, and its search API forbids putting results into AI.
 """
 import datetime as dt
 import html
@@ -27,7 +29,6 @@ from nss_common import (BLUESKY_DID, DISTRICTS, GROUPS, HERE, NEIGHBORHOODS, PUB
 
 BRAND = HERE / "brand"
 NAMES = HERE / "data" / "names.json"
-BLOGS = HERE / "data" / "blogs.json"
 
 RECENT_DAYS = 14
 # The home page intro, his wording (10 October 2026); the districts themselves
@@ -154,14 +155,12 @@ def replaced(e, open_at):
     return any(day >= e["licensed"] for day in open_at.get(address_of(e), ()))
 
 
-def listed(state, names=None, blogs=None, closed=False):
+def listed(state, names=None, closed=False):
     """Every place shown, newest first. English name, in order of preference:
-    a blog post's (nss_blogs.py), the licence's own bracketed English, the
-    model's (nss_names.py). closed=True keeps licences the register now shows
+    the licence's own bracketed English, then the model's (nss_names.py). closed=True keeps licences the register now shows
     closed (the site, his call of 29 October 2026), except replaced() ones;
     the card and the post leave them out."""
     names = load(NAMES) if names is None else names
-    blogs = load(BLOGS) if blogs is None else blogs
     open_at = defaultdict(list)
     for e in state["licences"].values():
         if e.get("status") != "closed" and e.get("licensed"):
@@ -177,17 +176,13 @@ def listed(state, names=None, blogs=None, closed=False):
         except (KeyError, ValueError):
             continue
         name = display_name(e["name"])
-        b = blogs.get(mgt) or {}
-        if b.get("delivery_only"):
-            continue
-        name_en = title_gloss(b.get("english") or e.get("name_en") or names.get(name))
+        name_en = title_gloss(e.get("name_en") or names.get(name))
         # The kind's English is read from TYPES now, not the harvest's stored copy,
         # so relabelling a type reaches every licence already on record.
         type_en, group = type_info(e.get("type_ko"), e.get("register"))
         out.append(dict(e, id=mgt, date=d, name=name, name_ko=korean_shown(name, name_en),
                         type_en=type_en, group=group,
-                        name_en=name_en,
-                        opened=b.get("opened"), about=b.get("about")))
+                        name_en=name_en))
     # One place, two licences: the register sometimes holds the same name at
     # the same street address twice (초초맛차, 을지로 281, on 8 October 2026,
     # once with "DDP 팔거리" after the comma). The earlier licence stands.
@@ -216,7 +211,6 @@ def entry_html(e):
         title = f'{esc(e["name_en"])} <span class="ko" lang="ko">{esc(e["name_ko"])}</span>'
     else:
         title = f'<span lang="ko">{esc(e["name"])}</span>'
-    opened = e.get("opened")
     shut = e.get("status") == "closed"
     if shut:
         # "by": when the register gives no closing date, the harvest records the
@@ -227,17 +221,11 @@ def entry_html(e):
         except ValueError:
             when = ""
         status = f'<span class="status closed">Closed{when}</span>'
-    elif opened:
-        posted = dt.date.fromisoformat(opened["posted"])
-        status = (f'<span class="status opened">Opened</span> '
-                  f'<a class="status" href="{esc(opened["url"])}">blog post, '
-                  f'{day_text(posted, weekday=False)}</a>')
     else:
         status = '<span class="status">Newly licensed</span>'
-    about = f'<p class="about">{esc(e["about"])}</p>' if e.get("about") else ""
     return (f'<li class="{e["group"]}{" is-closed" if shut else ""}" data-district="{e["district"]}" data-group="{e["group"]}" '
             f'data-date="{e["date"].isoformat()}" data-type="{esc(e["type_en"])}">'
-            f'<h3>{title}</h3>{about}'
+            f'<h3>{title}</h3>'
             f'<p class="meta"><span class="chip {e["group"]}">{esc(e["type_en"])}</span>'
             f'<span class="chip place">{where}</span>{status}</p>'
             f'<p class="addr" lang="ko">{esc(e["road"] or e["lot"])} '
@@ -324,7 +312,7 @@ ul{list-style:none;margin:0;padding:0}
 li{padding:10px 0;border-bottom:1px solid var(--rule)}
 li h3{font-size:1.05rem;margin:0}
 li .ko{color:var(--muted);font-weight:400;margin-left:6px}
-.about{font-style:italic;margin:2px 0 4px}
+
 .prose{max-width:40em}
 /* About page subheads (29 October 2026, his pick of three mock-ups): sans
    section head, small accent capitals beneath it. */
@@ -332,7 +320,7 @@ li .ko{color:var(--muted);font-weight:400;margin-left:6px}
 .prose h3{font:700 .8rem/1.3 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
 text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin:26px 0 6px}
 ul.plain{list-style:disc;padding-left:20px}ul.plain li{border:0;padding:2px 0;margin:0}
-.status.opened{color:var(--cafe);font-weight:700}
+
 .status.closed{font-weight:700}
 li.is-closed h3{color:var(--muted);opacity:.6}
 li p{margin:2px 0}
@@ -537,21 +525,16 @@ few days of its license, often before anyone has written about it.</p>
 <p>In the month ending Oct. 8, 2026, these districts accounted for 446 of the 991 places
 that were licensed across all 25 of Seoul’s districts and still open on Oct. 29, after the
 exclusions below.</p>
-<h3>Newly licensed, or opened?</h3>
-<p>Every place starts as <strong>newly licensed</strong>. A license is permission to serve,
-not proof that a place is serving: some open weeks later, and a few never do. Once a week,
-each place licensed in the last six weeks is looked up on Naver’s blogs. When a post shows
-the place open, at the same address, it is marked <strong>opened</strong> with a link to
-that post and a one-line description. The post itself is never copied.
+<h3>Newly licensed</h3>
+<p>Every place is listed as <strong>newly licensed</strong>. A license is permission to serve,
+not proof that a place is serving: some open weeks later, and a few never do.
 A place whose license the register shows closed stays on the list, marked
 <strong>closed</strong>, unless a new license has been issued at the same address.</p>
 <h3>Names</h3>
 <p>Where the license gives a name in English, the site uses it. Otherwise the English name
 is written by an A.I. model (Anthropic’s Claude): a Korean spelling of an English word
 becomes that word, and anything else is romanized, with a short meaning when the name is
-ordinary Korean words. When a blog post shows the place’s own English name, from its sign
-or menu, that is used instead. The one-line descriptions of opened places are A.I.-written
-too, from the posts. The Korean name from the license is always shown beside the English.</p>
+ordinary Korean words. The Korean name from the license is always shown beside the English.</p>
 <h3>Left out</h3>
 <p>Convenience stores, food trucks, caterers, counters in stations, cinemas, motorway stops
 and department stores; licenses marked temporary, which are almost all food-hall pop-ups;
@@ -560,7 +543,7 @@ already listed at the same address.</p>
 <h3>On Bluesky</h3>
 <p><a href="https://bsky.app/profile/nowservingseoul.com">@nowservingseoul.com</a> posts each
 day’s licenses as a card, with a map of where they are in a reply. The card names five of the
-day’s places: any a blog post says has opened, then independents ahead of chain branches, spread
+day’s places: independents ahead of chain branches, spread
 across kinds and districts. It is a sample, not a recommendation.</p>
 <h3>How current</h3>
 <p>The register runs a couple of days behind. The newest license on record is dated
@@ -569,7 +552,7 @@ across kinds and districts. It is a sample, not a recommendation.</p>
 <p>License data: Seoul Metropolitan Government,
 <a href="https://data.seoul.go.kr/dataList/OA-16094/S/1/datasetView.do">서울시 일반음식점 인허가 정보</a>
 and its café counterpart, under KOGL Type 1. Locations from Kakao’s address search. Map
-tiles © OpenStreetMap contributors. Posts from Naver blogs, linked, never copied.</p>
+tiles © OpenStreetMap contributors.</p>
 </section>"""
     return page("Now Serving Seoul · About", "How the list is made.", body, [], "/about/",
                 with_map=False, with_filters=False, interest=True)

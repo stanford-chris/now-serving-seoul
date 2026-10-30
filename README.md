@@ -14,9 +14,13 @@ Seoul’s food-license register.
 | Build | `nss_build.py` | Writes `public/`: the last 14 days with a map and filters, one page per week, an index of weeks, an about page |
 | Deploy | `deploy.sh` | Harvest, build, `wrangler deploy` to the Worker `now-serving-seoul` |
 
-A license is not an opening. Every place is listed as **newly licensed**; it
-becomes **opened** only when a post about it says so (the weekly pass, not yet
-built).
+A license is not an opening. Every place is listed as **newly licensed**.
+⛔ A weekly pass that marked places **opened** from Naver blog posts
+(`nss_blogs.py`) was retired on 30 October 2026, before its first scheduled run:
+Naver's terms of service forbid searching Naver or collecting posts by
+automated means without its permission, its robots.txt closes search to every
+bot, and its search API's terms (since 7 September 2026) forbid putting results
+into AI or storing them. It is in git history before that date.
 
 ## Left out
 

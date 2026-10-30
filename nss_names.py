@@ -4,15 +4,15 @@
     python3 nss_names.py            # translate names not yet cached
     python3 nss_names.py --dry-run  # say how many, call nothing
 
-The site shows, in this order of preference: the English a blog post gives the
-place (nss_blogs.py), the English the licence itself carries in brackets, then
-this. Each Korean name is sent once, ever; the cache is the record.
+The site shows, in this order of preference: the English the licence itself
+carries in brackets, then this. Each Korean name is sent once, ever; the cache is the record.
 
 The model is Fable 5.1, chosen 10 October 2026 on the same 20 real names:
 Haiku gave "Deojeong" and "Peuricheu" where Sonnet gave "The Jeong" and
 "Fritz", and Fable alone also recovered "Starlit" and "Firstier" and read
 제비 as the bird. None recognized every English word spelled in Hangul
-("벨리풀", probably Belly Full), which is what the blog override is for.
+("벨리풀", probably Belly Full); a blog post's English used to correct those,
+until the Naver blog pass was retired on 30 October 2026.
 
 Exit 0 done, 1 a batch failed (those names stay Korean-only and are retried).
 """

@@ -1,4 +1,4 @@
-"""One confined model call, shared by the name and blog passes.
+"""One confined model call, used by the name pass.
 
 `claude -p --restricted --tools ""`: text in, JSON out, no tools at all. An
 unconfined `claude -p` is an agent with Bash (the everygeorgia incident in

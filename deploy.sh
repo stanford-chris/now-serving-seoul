@@ -22,10 +22,6 @@ step "harvest" "$PY" nss_harvest.py || true
 # cached, so a quiet day costs nothing. A failed batch stays Korean-only and is
 # retried tomorrow.
 step "names" "$PY" nss_names.py || true
-# The weekly blog pass ("opened", and a post's own English name), Mondays only.
-if [ "$(TZ=Asia/Seoul date +%u)" = 1 ]; then
-  step "blogs" "$PY" nss_blogs.py || true
-fi
 step "build" "$PY" nss_build.py || { echo "!! build failed: not deploying"; exit "$worst"; }
 # The daily Bluesky post (since 30 October 2026, his call): only once the site
 # that the post links to is up, so a failed deploy posts nothing. A quiet day

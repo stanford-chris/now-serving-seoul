@@ -109,14 +109,13 @@ def is_branch(e):
 
 
 def highlights(es, n=HIGHLIGHTS):
-    """A few places for the card: any a blog post says has opened first, then
-    independents before chain branches, one at a time across kinds and
+    """A few places for the card: independents before chain branches, one at a time across kinds and
     districts so the few are not all Gangnam restaurants. Deterministic, so a
     redraft of a day gives the same card."""
-    pool = sorted(es, key=lambda e: (not e.get("opened"), e["name_en"] or e["name"]))
+    pool = sorted(es, key=lambda e: e["name_en"] or e["name"])
     chosen, kinds, districts = [], Counter(), Counter()
     while pool and len(chosen) < n:
-        pick = min(pool, key=lambda e: (not e.get("opened"), is_branch(e), kinds[e["group"]],
+        pick = min(pool, key=lambda e: (is_branch(e), kinds[e["group"]],
                                         districts[e["district"]]))
         pool.remove(pick)
         chosen.append(pick)
@@ -153,9 +152,8 @@ def build_html(day, es):
         ko = e.get("name_ko") or e["name"]
         name = (f'{esc(en)} <span class="ko" lang="ko">{esc(ko)}</span>'
                 if en and en != ko else f'<span lang="ko">{esc(ko)}</span>')
-        tag = '<span class="op">Opened</span>' if e.get("opened") else ""
         rows.append(f'<li><span class="dot {e["group"]}"></span><span class="nm">{name}</span>'
-                    f'{tag}<span class="wh">{esc(e["type_en"])}, '
+                    f'<span class="wh">{esc(e["type_en"])}, '
                     f'{esc(DISTRICTS[e["district"]][0])}</span></li>')
     more = len(es) - len(rows)
     more_html = (f'<p class="more">and {more} more at <b>{SITE}</b></p>' if more > 0
@@ -180,8 +178,6 @@ li{{display:flex;align-items:baseline;gap:0;padding:3px 0}}
 li .dot{{position:relative;top:-1px}}
 .nm{{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}}
 .ko{{font-weight:400;color:#6a645b;margin-left:5px}}
-.op{{font-size:11px;font-weight:600;color:#fff;background:#0f766e;border-radius:3px;
-padding:0 5px;margin-left:7px;flex:none}}
 .wh{{margin-left:auto;padding-left:12px;color:#6a645b;font-size:13px;white-space:nowrap;flex:none}}
 .more{{margin:8px 0 0;font-size:13px;color:#6a645b}}.more b{{color:#c2410c;font-weight:600}}
 </style></head><body><div class="card">
@@ -320,8 +316,7 @@ def alt_text(day, es):
         en = e.get("name_en")
         ko = e.get("name_ko") or e["name"]
         name = f"{en} ({ko})" if en and en != e["name"] else e["name"]
-        lines.append(f"{name}, {kind_text(e['type_en'])}, {DISTRICTS[e['district']][0]}"
-                     + (", opened" if e.get("opened") else "") + ".")
+        lines.append(f"{name}, {kind_text(e['type_en'])}, {DISTRICTS[e['district']][0]}.")
     return "\n".join(lines)
 
 
