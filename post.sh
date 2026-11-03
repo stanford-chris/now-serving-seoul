@@ -14,9 +14,9 @@ set -uo pipefail
 cd "$(dirname "$0")" || exit 1
 PY=/Library/Frameworks/Python.framework/Versions/3.13/bin/python3
 
-# POSTING=0 holds the post: his call, 29 October 2026, before the first live
-# post, and again on 30 October. Do not set it to 1 without his say-so.
-POSTING=0
+# POSTING=0 holds the post. Held from 29 October 2026 (his call) and released
+# on 3 November ("We can start posting"); set it back to 0 to hold again.
+POSTING=1
 if [ "$POSTING" != 1 ]; then
   echo "$(date '+%F %T') posting held (POSTING=0 in post.sh): nothing posted"
   exit 0
