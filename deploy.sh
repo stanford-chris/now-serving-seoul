@@ -23,21 +23,14 @@ step "harvest" "$PY" nss_harvest.py || true
 # retried tomorrow.
 step "names" "$PY" nss_names.py || true
 step "build" "$PY" nss_build.py || { echo "!! build failed: not deploying"; exit "$worst"; }
-# The daily Bluesky post (since 30 October 2026, his call): only once the site
-# that the post links to is up, so a failed deploy posts nothing. A quiet day
-# (no new complete licence date) exits 0; a failed map reply exits 1 with the
-# card already recorded, so tomorrow does not post it again.
-# POSTING=0 holds the post and still deploys the site: his call, 29 October
-# 2026, before the first live post, and again on 30 October ("We shouldn't post
-# to Bluesky"). Do not set it to 1 without his say-so.
-POSTING=0
+# The daily Bluesky post is post.sh's job at 08:00 since 3 November 2026 (his
+# call: 06:20 is before Seoul is up). This run only records that today's site
+# went up, and post.sh posts nothing without that record, so a failed deploy
+# still posts nothing.
+rm -f data/deployed
 if step "deploy" /opt/homebrew/bin/npx --yes wrangler@latest deploy; then
-  if [ "$POSTING" = 1 ]; then
-    step "post" "$PY" nss_post.py || true
-  else
-    echo "posting held (POSTING=0 in deploy.sh): nothing posted"
-  fi
+  TZ=Asia/Seoul date +%F > data/deployed
 else
-  echo "!! deploy failed: not posting"
+  echo "!! deploy failed: today's post will not go out"
 fi
 exit "$worst"

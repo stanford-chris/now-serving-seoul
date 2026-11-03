@@ -12,7 +12,8 @@ Seoul’s food-license register.
 | --- | --- | --- |
 | Harvest | `nss_harvest.py` | Reads 16 registers (two per district), keeps every new operating license by its management number, marks closures, pins each place from the register’s own coordinates (EPSG:5174) |
 | Build | `nss_build.py` | Writes `public/`: the last 14 days with a map and filters, one page per week, an index of weeks, an about page |
-| Deploy | `deploy.sh` | Harvest, build, `wrangler deploy` to the Worker `now-serving-seoul` |
+| Deploy | `deploy.sh` | Harvest, build, `wrangler deploy` to the Worker `now-serving-seoul` at 06:20; records the day's deploy in `data/deployed` |
+| Post | `post.sh` | The daily Bluesky post at 08:00 (launchd `com.chrisstanford.nowservingseoul-post`), only after today's deploy; held while `POSTING=0` |
 
 A license is not an opening. Every place is listed as **newly licensed**.
 ⛔ A weekly pass that marked places **opened** from Naver blog posts
