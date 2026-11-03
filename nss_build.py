@@ -125,6 +125,21 @@ def _words(s):
     return re.findall(r"[0-9a-z]+", re.sub(r"[`'’]", "", (s or "").lower()))
 
 
+def curl_quotes(s):
+    """House style: curly quotes and apostrophes in the English names, which
+    reach the site, the card and its alt text from here (his call, 3 November
+    2026: 62 of 1,415 held a straight apostrophe). The register writes a
+    backtick for an apostrophe too ("It`s Coffe"), so one between letters is
+    one. The plaques bot's rules, plus that."""
+    if not s:
+        return s
+    s = re.sub(r"(?<=\w)[`'](?=\w)", "’", s)          # Park's, It`s
+    s = re.sub(r"(^|[\s(“])'", r"\1‘", s)
+    s = s.replace("'", "’")
+    s = re.sub(r'(^|[\s(‘])"', r"\1“", s)
+    return s.replace('"', "”")
+
+
 def korean_shown(name, en):
     """The Korean name to show beside the English. The register often writes
     a place's English into its Korean name ("얌얌닭발(YamYam)"), and showing
@@ -176,11 +191,15 @@ def listed(state, names=None, closed=False):
         except (KeyError, ValueError):
             continue
         name = display_name(e["name"])
-        name_en = title_gloss(e.get("name_en") or names.get(name))
+        name_en = curl_quotes(title_gloss(e.get("name_en") or names.get(name)))
         # The kind's English is read from TYPES now, not the harvest's stored copy,
         # so relabelling a type reaches every licence already on record.
         type_en, group = type_info(e.get("type_ko"), e.get("register"))
-        out.append(dict(e, id=mgt, date=d, name=name, name_ko=korean_shown(name, name_en),
+        # The Korean name keeps the register's own text, but an apostrophe
+        # inside its English ("박스커피(Park's Coffee) 역삼태광타워점") is curled.
+        # Only between Latin letters: house style leaves Korean marks straight.
+        name_ko = re.sub(r"(?<=[A-Za-z])[`'](?=[A-Za-z])", "’", korean_shown(name, name_en) or "")
+        out.append(dict(e, id=mgt, date=d, name=name, name_ko=name_ko,
                         type_en=type_en, group=group,
                         name_en=name_en))
     # One place, two licences: the register sometimes holds the same name at

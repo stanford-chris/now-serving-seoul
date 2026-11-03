@@ -286,6 +286,22 @@ def place(name="부빔", en="Bubim", group="restaurant", district="YS", day="202
             "date": dt.date.fromisoformat(day), "type_en": type_en}
 
 
+class CurlQuotes(unittest.TestCase):
+    def test_apostrophes_and_backticks_curl(self):
+        self.assertEqual(B.curl_quotes("Park's Coffee"), "Park’s Coffee")
+        self.assertEqual(B.curl_quotes("It`s Coffe"), "It’s Coffe")
+        self.assertEqual(B.curl_quotes("Yongsan I'Park Mall branch"), "Yongsan I’Park Mall branch")
+        self.assertEqual(B.curl_quotes("Sons' Table"), "Sons’ Table")
+
+    def test_quotes_open_and_close(self):
+        self.assertEqual(B.curl_quotes('The "Dal" Bar'), "The “Dal” Bar")
+        self.assertEqual(B.curl_quotes("Bar 'Moon'"), "Bar ‘Moon’")
+
+    def test_nothing_to_do(self):
+        self.assertIsNone(B.curl_quotes(None))
+        self.assertEqual(B.curl_quotes("Cafe Iseo"), "Cafe Iseo")
+
+
 class Card(unittest.TestCase):
     def test_newest_day_waits_for_a_later_one(self):
         es = [place(day="2026-10-23"), place(day="2026-10-26"), place(day="2026-10-27")]
