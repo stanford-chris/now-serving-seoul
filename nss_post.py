@@ -40,7 +40,14 @@ from nss_common import BLUESKY_DID as DID, DATA, DISTRICTS, STATE
 POST_STATE = DATA / "post_state.json"
 KEYCHAIN = ("nowservingseoul-bluesky", "nowservingseoul.com")    # service, account
 MAX_BLOB = 950_000        # Bluesky refuses an image blob over about 976 KB
-MAP_REPLY_TEXT = "Where they are, by district."
+MAP_REPLY_TEXT = "Where they are, by district. Full list and map: "
+
+
+def map_reply_text():
+    """The map reply carries the site link too (his call, 3 November 2026),
+    so someone looking at the map need not scroll back up for it."""
+    from atproto import client_utils
+    return client_utils.TextBuilder().text(MAP_REPLY_TEXT).link(K.SITE, f"https://{K.SITE}/")
 # #Seoul alone, his call, 29 October 2026. #FoodSky was measured as the one
 # food tag with a live audience and dropped on reflection: the card is
 # licence data, not food. On the card post only: hashtag feeds take
@@ -142,7 +149,7 @@ def main():
         print(f"day: {b.day_text(day, year=True)} ({len(es)} places)")
         print(f"card {card_size[0]}x{card_size[1]}, {len(card_data):,} bytes; "
               f"map {map_size[0]}x{map_size[1]}, {len(map_data):,} bytes")
-        print(f"post: {card_text(day, es).build_text()}\nreply: {MAP_REPLY_TEXT}")
+        print(f"post: {card_text(day, es).build_text()}\nreply: {map_reply_text().build_text()}")
         if args.dry_run:
             print(f"dry run: images in {out}, nothing posted, state unchanged")
             return
@@ -157,7 +164,7 @@ def main():
         print(f"posted {res.uri}")
         try:
             ref = models.create_strong_ref(res)
-            reply = client.send_post(text=MAP_REPLY_TEXT, langs=["en"],
+            reply = client.send_post(text=map_reply_text(), langs=["en"],
                                      reply_to=models.AppBskyFeedPost.ReplyRef(parent=ref, root=ref),
                                      embed=embed(client, map_data, map_alt, map_size))
         except Exception as exc:          # the card is up and recorded; say so and fail
