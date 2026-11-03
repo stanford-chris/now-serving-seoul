@@ -46,6 +46,11 @@ SENTINEL = (255, 0, 255)
 CARD_WIDTH = 600          # CSS px; rendered at 2x
 HIGHLIGHTS = 5
 SITE = "nowservingseoul.com"
+# KOGL Type 1 asks for the source to be credited, and a card travels without the
+# bio, so the credit rides on the images and in their alt text (his call,
+# 3 November 2026). The site's footer words it the same way.
+CREDIT = "Data: Seoul Metropolitan Government (KOGL Type 1)."
+AI_NOTE = "Some English names are A.I.-generated."
 # One word per kind, singular and plural, for the counts line.
 KIND_WORDS = {"restaurant": ("restaurant", "restaurants"),
               "bar": ("bar", "bars"),
@@ -180,12 +185,14 @@ li .dot{{position:relative;top:-1px}}
 .ko{{font-weight:400;color:#6a645b;margin-left:5px}}
 .wh{{margin-left:auto;padding-left:12px;color:#6a645b;font-size:13px;white-space:nowrap;flex:none}}
 .more{{margin:8px 0 0;font-size:13px;color:#6a645b}}.more b{{color:#c2410c;font-weight:600}}
+.credit{{margin:10px 0 0;padding-top:8px;border-top:1px solid #e4dfd6;font-size:11px;color:#8a8478}}
 </style></head><body><div class="card">
 <div class="mast"><b>Now Serving Seoul</b></div>
 <h1>{headline(len(es))}</h1>
 <p class="date">{b.day_text(day)}</p>
 <div class="kinds">{kind_html}</div>
 <h2>Among them</h2><ul>{"".join(rows)}</ul>{more_html}
+<p class="credit">{CREDIT} {AI_NOTE}</p>
 </div></body></html>"""
 
 
@@ -264,11 +271,13 @@ text tspan{{fill:#c2410c;font-weight:700}}
 font-size:12px;color:#6a645b}}
 .foot span{{margin-right:14px}}
 .foot i{{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}}
+.credit{{padding:6px 26px 0;font-size:11px;color:#8a8478}}
 </style></head><body><div class="card">
 <div class="mast"><b>Where they are</b><span>{b.day_text(day)}</span></div>
 <svg width="{MAP_WIDTH}" height="{height:.0f}" viewBox="0 0 {MAP_WIDTH} {height:.0f}">
 <g class="bg">{grey}</g><g>{today}</g><g>{"".join(labels)}</g></svg>
 <div class="foot"><div>{legend}</div><div>Gray: every place listed so far</div></div>
+<div class="credit">{CREDIT}</div>
 </div></body></html>"""
 
 
@@ -276,7 +285,8 @@ def map_alt(day, es):
     _, districts = summary(day, es)
     return (f"Map of the {len(es)} places licensed on {b.day_text(day)}, by district: "
             + ", ".join(f"{n} {c}" for n, c in districts)
-            + ". Each is a dot colored by kind, over gray dots for every place listed so far.")
+            + ". Each is a dot colored by kind, over gray dots for every place listed so far. "
+            + CREDIT)
 
 
 def render(page, out):
@@ -311,6 +321,7 @@ def alt_text(day, es):
     lines = [f"Now Serving Seoul: {headline(len(es))} on {b.day_text(day)}.",
              "By kind: " + ", ".join(plural(kinds[k], k) for k in GROUPS if kinds[k]) + ".",
              "By district: " + ", ".join(f"{n} {c}" for n, c in districts) + ".",
+             f"{CREDIT} {AI_NOTE}",
              "All of them:"]
     for e in sorted(es, key=lambda e: (DISTRICTS[e["district"]][0], e["name_en"] or e["name"])):
         en = e.get("name_en")

@@ -350,6 +350,20 @@ class Card(unittest.TestCase):
         alt = K.map_alt(dt.date(2026, 10, 26), es)
         self.assertIn("Gangnam 2, Mapo 1", alt)
 
+    def test_source_is_credited_on_every_image_and_alt(self):
+        # KOGL Type 1: the credit must travel with the images, not just the bio.
+        day, es = dt.date(2026, 10, 26), [place(f"식당{i}", f"R{i}") for i in range(12)]
+        self.assertIn(K.CREDIT, K.build_html(day, es))
+        self.assertIn(K.AI_NOTE, K.build_html(day, es))
+        self.assertIn(K.CREDIT, K.map_html(day, es[:1], [{"lon": 126.95 + i / 1000, "lat": 37.52 + i / 2000,
+                                                    "district": "GN"} for i in range(200)]))
+        alt = K.alt_text(day, es)
+        self.assertIn(K.CREDIT, alt)
+        self.assertIn(K.AI_NOTE, alt)
+        # before the list, so a long day cannot push it off the end
+        self.assertLess(alt.index(K.CREDIT), alt.index("All of them:"))
+        self.assertIn(K.CREDIT, K.map_alt(day, es))
+
     def test_handle_proof_is_the_did_alone(self):
         self.assertRegex(C.BLUESKY_DID, r"^did:plc:[a-z2-7]{24}$")
 
