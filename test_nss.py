@@ -386,6 +386,17 @@ class Card(unittest.TestCase):
     def test_headline_singular(self):
         self.assertEqual(K.headline(1), "1 new food license")
 
+    def test_post_text_names_the_districts_covered(self):
+        day = dt.date(2026, 10, 29)
+        self.assertEqual(K.post_text(day, [{}, {}]),
+                         "There were 2 new food licenses issued in the eight Seoul districts we "
+                         "track on Thursday, Oct. 29. Find the full list, with a map, at "
+                         "nowservingseoul.com")
+
+    def test_post_text_singular(self):
+        self.assertIn("There was 1 new food license issued in the eight",
+                      K.post_text(dt.date(2026, 10, 29), [{}]))
+
 
 
 class InterestBox(unittest.TestCase):

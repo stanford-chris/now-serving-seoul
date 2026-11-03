@@ -37,7 +37,7 @@ from pathlib import Path
 
 from PIL import Image, ImageChops
 
-from nss_common import DISTRICTS, GROUPS, HERE, STATE
+from nss_common import DISTRICTS, GROUPS, HERE, STATE, district_count
 import nss_build as b
 
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -332,8 +332,10 @@ def alt_text(day, es):
 
 
 def post_text(day, es):
-    return (f"{headline(len(es))} in Seoul on {b.day_text(day)}. "
-            f"The full list, with a map: {SITE}")
+    verb = "was" if len(es) == 1 else "were"
+    return (f"There {verb} {headline(len(es))} issued in the {district_count()} Seoul districts we track "
+            f"on {b.day_text(day)}. "
+            f"Find the full list, with a map, at {SITE}")
 
 
 def main():
