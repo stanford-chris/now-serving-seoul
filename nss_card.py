@@ -333,8 +333,8 @@ def alt_text(day, es):
 
 def post_text(day, es):
     verb = "was" if len(es) == 1 else "were"
-    return (f"There {verb} {headline(len(es))} issued in the {district_count()} Seoul districts we track "
-            f"on {b.day_text(day)}. "
+    return (f"There {verb} {headline(len(es))} issued on {b.day_text(day)}, "
+            f"in the {district_count()} Seoul districts we track. "
             f"Find the full list, with a map, at {SITE}")
 
 
