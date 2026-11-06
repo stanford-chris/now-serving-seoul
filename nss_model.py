@@ -9,7 +9,7 @@ import os
 import re
 import subprocess
 
-MODEL = "claude-fable-5-1"   # chosen over Sonnet 5.5 and Haiku 5.5 on 20 real names, 10 October 2026
+MODEL = "claude-sonnet-5-5"   # his call, 6 November 2026: Fable 5.1 (the pick of 20 real names on 10 October) began refusing with "Usage credits are required"
 TOKEN = ("seoulbot", "claude-oauth-token")   # account, service: the shared setup-token
 HANGUL = re.compile(r"[가-힣ㄱ-ㅎㅏ-ㅣ]")
 

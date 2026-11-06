@@ -7,7 +7,8 @@
 The site shows, in this order of preference: the English the licence itself
 carries in brackets, then this. Each Korean name is sent once, ever; the cache is the record.
 
-The model is Fable 5.1, chosen 10 October 2026 on the same 20 real names:
+The model is Sonnet 5.5 since 6 November 2026, when Fable 5.1 began refusing
+with "Usage credits are required". Fable was chosen 10 October 2026 on 20 real names:
 Haiku gave "Deojeong" and "Peuricheu" where Sonnet gave "The Jeong" and
 "Fritz", and Fable alone also recovered "Starlit" and "Firstier" and read
 제비 as the bird. None recognized every English word spelled in Hangul

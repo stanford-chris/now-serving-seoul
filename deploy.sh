@@ -18,7 +18,7 @@ step() {
 PY=/Library/Frameworks/Python.framework/Versions/3.13/bin/python3
 
 step "harvest" "$PY" nss_harvest.py || true
-# English names for places not yet named: one Fable call per 40 new names,
+# English names for places not yet named: one model call per 40 new names,
 # cached, so a quiet day costs nothing. A failed batch stays Korean-only and is
 # retried tomorrow.
 step "names" "$PY" nss_names.py || true
